@@ -37,12 +37,15 @@ site is presentable from day one.
 ### 1. Create the Supabase project
 
 At [supabase.com](https://supabase.com), create a project, then open
-**SQL Editor** and run, in order:
+**SQL Editor** and run, in this order:
 
 1. `supabase/migrations/0001_init.sql` — tables, row level security,
    storage bucket
 2. `supabase/seed.sql` — the real resort content transcribed from the
    existing website (rooms, apartments, dining rates, testimonials, address)
+
+Both files are safe to re-run: nothing is duplicated, and the seed will
+not overwrite anything you have since edited in the admin panel.
 
 ### 2. Configure the app
 
@@ -135,6 +138,19 @@ npm run typecheck   # tsc --noEmit
 There is no lint script: `next lint` is deprecated and removed in Next 16, and
 it only offers an interactive setup rather than running. Add the ESLint CLI
 directly if you want linting.
+
+### Verifying the SQL
+
+```bash
+./scripts/verify-sql.sh
+```
+
+Spins up a throwaway local Postgres (with small stubs for Supabase's `auth`
+and `storage` schemas), applies the migration and seed, then asserts that
+they are idempotent, that the seed does not clobber edited content, and that
+row level security behaves correctly for an anonymous visitor, a signed-in
+non-admin, and an admin. Requires a local PostgreSQL server binary; it never
+touches a real project.
 
 ### Checking responsive behaviour
 

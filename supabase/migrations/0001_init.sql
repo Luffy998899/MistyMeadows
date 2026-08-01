@@ -16,6 +16,31 @@ create extension if not exists "pgcrypto";
 -- Helpers
 -- ---------------------------------------------------------------------
 
+create or replace function public.touch_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+-- ---------------------------------------------------------------------
+-- Admin allowlist
+--
+-- Must exist before is_admin() below: Postgres validates the body of a
+-- LANGUAGE sql function when it is created, so the table it selects from
+-- has to be there already.
+-- ---------------------------------------------------------------------
+
+create table if not exists public.admin_users (
+  user_id    uuid primary key references auth.users(id) on delete cascade,
+  email      text not null,
+  full_name  text,
+  created_at timestamptz not null default now()
+);
+
 -- SECURITY DEFINER so policies can call it without recursing into
 -- admin_users' own RLS.
 create or replace function public.is_admin()
@@ -30,26 +55,11 @@ as $$
   );
 $$;
 
-create or replace function public.touch_updated_at()
-returns trigger
-language plpgsql
-as $$
-begin
-  new.updated_at = now();
-  return new;
-end;
-$$;
-
--- ---------------------------------------------------------------------
--- Admin allowlist
--- ---------------------------------------------------------------------
-
-create table if not exists public.admin_users (
-  user_id    uuid primary key references auth.users(id) on delete cascade,
-  email      text not null,
-  full_name  text,
-  created_at timestamptz not null default now()
-);
+-- auth.uid() is null for the service role, so is_admin() returns false
+-- there — that is intentional. The service role bypasses RLS entirely and
+-- never needs this function.
+revoke all on function public.is_admin() from public;
+grant execute on function public.is_admin() to authenticated, anon;
 
 -- ---------------------------------------------------------------------
 -- Media library — every image/video the owner uploads
