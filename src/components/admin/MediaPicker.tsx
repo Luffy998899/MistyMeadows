@@ -223,7 +223,7 @@ export function MediaPicker({
 
           {help ? <p className="mt-2 text-xs text-stone">{help}</p> : null}
           {error ? (
-            <p role="alert" className="mt-2 text-xs text-burgundy">
+            <p role="alert" className="mt-2 text-xs text-bark">
               {error}
             </p>
           ) : null}
@@ -249,7 +249,7 @@ export function MediaPicker({
                       setBrowsing(false);
                     }}
                     className={`block aspect-square w-full overflow-hidden border-2 ${
-                      selected?.id === item.id ? "border-green" : "border-transparent"
+                      selected?.id === item.id ? "border-clay" : "border-transparent"
                     }`}
                     title={item.title ?? item.storage_path}
                   >

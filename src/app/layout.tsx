@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Inter_Tight } from "next/font/google";
+import { Fraunces, Inter_Tight, Parisienne } from "next/font/google";
 
 import "./globals.css";
 
@@ -19,6 +19,15 @@ const interTight = Inter_Tight({
   variable: "--font-inter-tight",
 });
 
+// Signature script. Loaded for a handful of words per page, so a single
+// weight is all that is needed.
+const parisienne = Parisienne({
+  subsets: ["latin"],
+  weight: "400",
+  display: "swap",
+  variable: "--font-parisienne",
+});
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://mistymeadowsresorts.com"),
   title: {
@@ -36,14 +45,17 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0e3a28",
+  themeColor: "#3e362e",
   width: "device-width",
   initialScale: 1,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en-IN" className={`${fraunces.variable} ${interTight.variable}`}>
+    <html
+      lang="en-IN"
+      className={`${fraunces.variable} ${interTight.variable} ${parisienne.variable}`}
+    >
       <body>{children}</body>
     </html>
   );

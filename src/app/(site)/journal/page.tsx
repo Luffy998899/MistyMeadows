@@ -87,7 +87,7 @@ export default async function JournalPage() {
                             ? ` · ${formatDate(post.event_date ?? post.published_at)}`
                             : ""}
                         </p>
-                        <h2 className="text-h3 mt-2 font-display group-hover:text-green">
+                        <h2 className="text-h3 mt-2 font-display group-hover:text-bark">
                           {post.title}
                         </h2>
                         <p className="mt-2 text-sm text-stone">{post.excerpt}</p>

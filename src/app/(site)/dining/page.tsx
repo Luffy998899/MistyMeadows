@@ -57,7 +57,7 @@ export default async function DiningPage() {
                       <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
                         <h3 className="font-display text-[1.25rem]">{item.name}</h3>
                         {item.price_note ? (
-                          <p className="whitespace-nowrap text-sm text-burgundy">
+                          <p className="whitespace-nowrap text-sm text-bark">
                             {item.price_note}
                           </p>
                         ) : null}

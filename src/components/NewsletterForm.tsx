@@ -34,7 +34,7 @@ export function NewsletterForm() {
 
   if (state === "done") {
     return (
-      <p role="status" className="text-sm text-mist">
+      <p role="status" className="text-sm text-linen">
         {message}
       </p>
     );
@@ -42,7 +42,7 @@ export function NewsletterForm() {
 
   return (
     <form onSubmit={onSubmit} className="w-full">
-      <label htmlFor="newsletter-email" className="field-label text-mist">
+      <label htmlFor="newsletter-email" className="field-label text-linen">
         Email address
       </label>
       <div className="flex flex-col gap-2 sm:flex-row">
@@ -61,7 +61,7 @@ export function NewsletterForm() {
         </button>
       </div>
       {state === "error" ? (
-        <p role="alert" className="mt-2 text-sm text-mist">
+        <p role="alert" className="mt-2 text-sm text-linen">
           {message}
         </p>
       ) : null}

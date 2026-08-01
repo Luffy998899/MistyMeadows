@@ -69,7 +69,7 @@ export default async function RoomsPage() {
                       </th>
                       <td className="py-4 pr-4 text-sm text-stone">{apartment.block}</td>
                       <td className="py-4 pr-4 text-sm text-stone">{apartment.detail}</td>
-                      <td className="py-4 text-right font-display text-[1.0625rem] text-burgundy">
+                      <td className="py-4 text-right font-display text-[1.0625rem] text-bark">
                         {apartment.rate_monthly_inr
                           ? `₹${apartment.rate_monthly_inr.toLocaleString("en-IN")}`
                           : "On request"}

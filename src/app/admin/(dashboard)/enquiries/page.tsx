@@ -53,7 +53,7 @@ export default async function EnquiriesPage({
               aria-current={isActive ? "page" : undefined}
               className={`px-4 py-2 text-sm transition-colors ${
                 isActive
-                  ? "bg-pine text-paper"
+                  ? "bg-umber text-paper"
                   : "border border-paper-edge bg-paper text-stone hover:text-ink"
               }`}
             >
@@ -64,7 +64,7 @@ export default async function EnquiriesPage({
       </nav>
 
       {error ? (
-        <p role="alert" className="mt-8 border-l-2 border-burgundy bg-paper p-4 text-sm text-burgundy">
+        <p role="alert" className="mt-8 border-l-2 border-bark bg-paper p-4 text-sm text-bark">
           Could not load enquiries: {error.message}
         </p>
       ) : enquiries.length === 0 ? (

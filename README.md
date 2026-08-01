@@ -152,29 +152,65 @@ row level security behaves correctly for an anonymous visitor, a signed-in
 non-admin, and an admin. Requires a local PostgreSQL server binary; it never
 touches a real project.
 
-### Checking responsive behaviour
+### Checking the front end
 
 With a server running on port 3210:
 
 ```bash
-node scripts/screenshot.mjs /rooms rooms 1440,768,375
+node scripts/screenshot.mjs /rooms rooms 1440,768,375   # layout at each width
+node scripts/contrast.mjs / /rooms /contact             # WCAG AA contrast
+node scripts/interactions.mjs                           # nav, keyboard, forms
 ```
 
-Writes to `.screenshots/` and reports horizontal overflow, failed requests and
-console errors. Exits non-zero if anything is wrong.
+`screenshot.mjs` writes to `.screenshots/` and reports horizontal overflow,
+failed requests and console errors. `contrast.mjs` measures *rendered* colour
+against AA — it parses via canvas, so it handles the `oklab()` values Tailwind
+emits for opacity modifiers, which naive hex arithmetic gets wrong. Both
+scroll the page first so lazily revealed sections are actually measured. All
+three exit non-zero on failure.
 
 ---
 
 ## Design
 
-Palette and type are derived from the company logo — the three nested peaks
-are forest green (`#157a4c`), the wordmark burgundy (`#7b1e32`), set on a warm
-paper neutral so the photography carries the colour. Display face is
-*Fraunces* (its SOFT and WONK axes are used on signature lines), body is
-*Inter Tight*. Tokens are defined once in `src/app/globals.css`.
+### Palette
 
-The peak silhouette recurs as a structural device: section rules, list
-bullets, empty media frames and the favicon.
+Built on the five supplied swatches, used verbatim:
+
+| Token | Hex | Role |
+| --- | --- | --- |
+| `ink` / `umber` | `#3E362E` | Body text, dark section ground |
+| `bark` | `#865D36` | Emphasis, prices, links, the logo mark |
+| `clay` | `#93785B` | Rules and icons only — 3.6:1, below AA for text |
+| `tan` | `#AC8968` | Section ground |
+| `greige` | `#A69080` | Supporting tone |
+
+Three tones are **derived**, because the supplied set has no light ground and
+nothing dark enough for small text on the mid browns: `paper` (`#F4EDE4`),
+`umber-deep` (`#2B241E`) and `stone` (`#6B5A47`).
+
+Sections alternate paper → umber → paper → almond → paper → tan → paper →
+umber, so the page has vertical rhythm rather than running cream throughout.
+Because the mid-brown grounds are light, `.on-almond` and `.on-tan` re-scope
+muted text to `umber-deep` — the default muted tone only reaches ~2.4:1 there.
+
+### Type
+
+*Fraunces* for display (SOFT and WONK axes give it a hand), *Inter Tight* for
+body, and *Parisienne* as a signature script — used only for standalone lines
+and a single accent word inside a heading, never for running text. Tokens are
+defined once in `src/app/globals.css`.
+
+The three-peak silhouette from the logo recurs as a structural device: section
+rules, list bullets, empty media frames and the favicon.
+
+### Motion
+
+`<Reveal>` fades and lifts sections in on scroll (one IntersectionObserver per
+element, disconnected after it fires), `<Parallax>` drifts images within their
+frames, and the nearby-towns band runs two counter-scrolling rows. All of it
+is disabled under `prefers-reduced-motion`, and the hidden state is applied
+only once JavaScript has run, so content is never stuck invisible.
 
 ---
 

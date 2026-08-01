@@ -61,7 +61,7 @@ function FieldControl({
           name={field.name}
           type="checkbox"
           defaultChecked={row[field.name] === undefined ? true : Boolean(row[field.name])}
-          className="mt-1 h-4 w-4 accent-[#157a4c]"
+          className="mt-1 h-4 w-4 accent-[#865d36]"
         />
         <label htmlFor={id} className="text-sm">
           {field.label}
@@ -181,7 +181,7 @@ export function ResourceForm({
       </div>
 
       {state?.error ? (
-        <p role="alert" className="mt-6 border-l-2 border-burgundy bg-paper p-4 text-sm text-burgundy">
+        <p role="alert" className="mt-6 border-l-2 border-bark bg-paper p-4 text-sm text-bark">
           {state.error}
         </p>
       ) : null}

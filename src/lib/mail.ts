@@ -80,8 +80,8 @@ function renderEnquiry(enquiry: EnquiryPayload): { text: string; html: string } 
   ].join("\n");
 
   const html = `
-    <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;color:#1b1d19">
-      <p style="font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#6e6c61;margin:0 0 4px">
+    <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;color:#3e362e">
+      <p style="font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#6b5a47;margin:0 0 4px">
         Misty Meadows Resorts
       </p>
       <h1 style="font-size:22px;font-weight:400;margin:0 0 20px">New booking enquiry</h1>
@@ -89,8 +89,8 @@ function renderEnquiry(enquiry: EnquiryPayload): { text: string; html: string } 
         ${rows
           .map(
             ([k, v]) => `<tr>
-              <td style="padding:8px 0;color:#6e6c61;width:110px;border-bottom:1px solid #ede7da">${k}</td>
-              <td style="padding:8px 0;border-bottom:1px solid #ede7da">${escapeHtml(v)}</td>
+              <td style="padding:8px 0;color:#6b5a47;width:110px;border-bottom:1px solid #ebe0d3">${k}</td>
+              <td style="padding:8px 0;border-bottom:1px solid #ebe0d3">${escapeHtml(v)}</td>
             </tr>`,
           )
           .join("")}
@@ -98,7 +98,7 @@ function renderEnquiry(enquiry: EnquiryPayload): { text: string; html: string } 
       ${
         enquiry.message
           ? `<p style="font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.6;margin:20px 0 0;
-                 padding:14px;background:#f5f2ea;white-space:pre-wrap">${escapeHtml(enquiry.message)}</p>`
+                 padding:14px;background:#f4ede4;white-space:pre-wrap">${escapeHtml(enquiry.message)}</p>`
           : ""
       }
     </div>`;

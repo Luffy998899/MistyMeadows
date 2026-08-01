@@ -60,8 +60,8 @@ export default async function RoomPage({ params }: Params) {
 
             {/* Rate + facts rail */}
             <aside className="lg:sticky lg:top-28 lg:self-start">
-              <div className="border-t-2 border-pine pt-6">
-                <p className="font-display text-[2rem] leading-none text-burgundy">
+              <div className="border-t-2 border-umber pt-6">
+                <p className="font-display text-[2rem] leading-none text-bark">
                   {formatRate(room)}
                 </p>
                 <p className="mt-2 text-sm text-stone">
@@ -85,7 +85,7 @@ export default async function RoomPage({ params }: Params) {
                   <ul className="mt-7 space-y-2.5 border-t border-paper-edge pt-6 text-sm">
                     {room.features.map((feature) => (
                       <li key={feature} className="flex items-start gap-3">
-                        <PeakGlyph className="mt-1 h-2.5 w-auto shrink-0 text-green" />
+                        <PeakGlyph className="mt-1 h-2.5 w-auto shrink-0 text-clay" />
                         {feature}
                       </li>
                     ))}
@@ -121,7 +121,7 @@ export default async function RoomPage({ params }: Params) {
                       sizes="(max-width: 640px) 100vw, 33vw"
                       zoom
                     />
-                    <h3 className="text-h3 mt-4 font-display group-hover:text-green">
+                    <h3 className="text-h3 mt-4 font-display group-hover:text-bark">
                       {other.name}
                     </h3>
                     <p className="mt-2 text-sm text-stone">{other.summary}</p>

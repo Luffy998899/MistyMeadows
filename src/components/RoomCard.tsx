@@ -46,7 +46,7 @@ export function RoomRow({ room, index }: { room: Room; index: number }) {
         {room.features.length > 0 ? (
           <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-stone">
             {room.features.map((feature) => (
-              <li key={feature} className="before:mr-2 before:text-green before:content-['—']">
+              <li key={feature} className="before:mr-2 before:text-clay before:content-['—']">
                 {feature}
               </li>
             ))}
@@ -54,7 +54,7 @@ export function RoomRow({ room, index }: { room: Room; index: number }) {
         ) : null}
 
         <div className="mt-6 flex flex-wrap items-baseline gap-x-6 gap-y-2">
-          <p className="font-display text-h3 text-burgundy">{formatRate(room)}</p>
+          <p className="font-display text-h3 text-bark">{formatRate(room)}</p>
           <p className="text-sm text-stone">
             {room.rate_inr ? room.rate_note : `Sleeps ${room.max_guests}`}
           </p>

@@ -118,7 +118,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
       <div
         id="mobile-nav"
         hidden={!menuOpen}
-        className="on-pine fixed inset-0 z-40 overflow-y-auto pt-[72px] lg:hidden"
+        className="on-umber fixed inset-0 z-40 overflow-y-auto pt-[72px] lg:hidden"
       >
         <nav aria-label="Mobile" className="shell py-8">
           <ul className="divide-y divide-paper/15 border-y border-paper/15">
@@ -128,7 +128,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
                   href={item.href}
                   className="flex items-baseline gap-4 py-4 font-display text-[1.75rem] text-paper"
                 >
-                  <span className="text-[0.625rem] tracking-[0.2em] text-mist">
+                  <span className="text-[0.625rem] tracking-[0.2em] text-linen">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   {item.label}
@@ -141,7 +141,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
             Enquire about a stay
           </Link>
 
-          <div className="mt-8 space-y-1 text-sm text-mist">
+          <div className="mt-8 space-y-1 text-sm text-linen">
             {settings.phones.map((p) => (
               <a key={p} href={`tel:${p.replace(/\s/g, "")}`} className="block py-1">
                 {p}

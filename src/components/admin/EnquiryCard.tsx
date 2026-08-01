@@ -36,7 +36,7 @@ export function EnquiryCard({ enquiry }: { enquiry: Enquiry }) {
       : null;
 
   return (
-    <details className="group border border-paper-edge bg-paper open:border-green/60">
+    <details className="group border border-paper-edge bg-paper open:border-clay/60">
       <summary className="flex cursor-pointer flex-wrap items-center gap-x-4 gap-y-1 p-4 marker:content-none">
         <span className="font-display text-[1.0625rem]">{enquiry.name}</span>
 
@@ -45,7 +45,7 @@ export function EnquiryCard({ enquiry }: { enquiry: Enquiry }) {
         <span className="ml-auto flex items-center gap-3">
           {!enquiry.mail_sent ? (
             <span
-              className="text-xs text-burgundy"
+              className="text-xs text-bark"
               title={enquiry.mail_error ?? "Not emailed"}
             >
               not emailed
@@ -54,7 +54,7 @@ export function EnquiryCard({ enquiry }: { enquiry: Enquiry }) {
           <span
             className={`px-2.5 py-1 text-[0.6875rem] uppercase tracking-[0.12em] ${
               enquiry.status === "new"
-                ? "bg-pine text-paper"
+                ? "bg-umber text-paper"
                 : "border border-paper-edge text-stone"
             }`}
           >
@@ -67,8 +67,8 @@ export function EnquiryCard({ enquiry }: { enquiry: Enquiry }) {
       <div className="border-t border-paper-edge p-4">
         <dl className="grid gap-x-8 gap-y-3 sm:grid-cols-2">
           {[
-            ["Email", <a key="e" href={`mailto:${enquiry.email}`} className="link-underline text-green">{enquiry.email}</a>],
-            ["Phone", enquiry.phone ? <a key="p" href={`tel:${enquiry.phone}`} className="link-underline text-green">{enquiry.phone}</a> : "—"],
+            ["Email", <a key="e" href={`mailto:${enquiry.email}`} className="link-underline text-bark">{enquiry.email}</a>],
+            ["Phone", enquiry.phone ? <a key="p" href={`tel:${enquiry.phone}`} className="link-underline text-bark">{enquiry.phone}</a> : "—"],
             ["Check in", formatDate(enquiry.check_in)],
             ["Check out", formatDate(enquiry.check_out) + (nights ? ` (${nights} night${nights === 1 ? "" : "s"})` : "")],
             ["Guests", enquiry.guests ?? "—"],
@@ -88,7 +88,7 @@ export function EnquiryCard({ enquiry }: { enquiry: Enquiry }) {
         ) : null}
 
         {enquiry.mail_error ? (
-          <p className="mt-4 text-xs text-burgundy">
+          <p className="mt-4 text-xs text-bark">
             Email could not be sent: {enquiry.mail_error}
           </p>
         ) : null}
@@ -132,12 +132,12 @@ export function EnquiryCard({ enquiry }: { enquiry: Enquiry }) {
               {pending ? "Saving…" : "Update"}
             </button>
             {state?.message ? (
-              <span role="status" className="text-xs text-green">
+              <span role="status" className="text-xs text-bark">
                 {state.message}
               </span>
             ) : null}
             {state?.error ? (
-              <span role="alert" className="text-xs text-burgundy">
+              <span role="alert" className="text-xs text-bark">
                 {state.error}
               </span>
             ) : null}

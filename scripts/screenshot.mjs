@@ -57,9 +57,33 @@ for (const width of widthsArg.split(",").map(Number)) {
   // `networkidle` never settles here: the marquee keeps a compositor-driven
   // animation running and fonts stream in, so wait on the load event and
   // then explicitly on webfonts before shooting.
+  // `networkidle` never settles here: the marquee keeps a compositor-driven
+  // animation running and fonts stream in, so wait on the load event and
+  // then explicitly on webfonts before shooting.
   await page.goto(`${BASE_URL}${pathArg}`, { waitUntil: "load", timeout: 45_000 });
   await page.evaluate(() => document.fonts.ready);
-  await page.waitForTimeout(600);
+
+  // Scroll-reveal sections only become visible once they intersect the
+  // viewport. A full-page screenshot does not scroll, so without this pass
+  // every below-the-fold section would be captured at opacity 0.
+  await page.evaluate(async () => {
+    // The site sets `scroll-behavior: smooth`, which makes scrollTo animate;
+    // stepping faster than the animation means the page never actually
+    // travels and only the topmost reveals fire. Force instant jumps.
+    const previous = document.documentElement.style.scrollBehavior;
+    document.documentElement.style.scrollBehavior = "auto";
+
+    const step = window.innerHeight * 0.75;
+    for (let y = 0; y < document.documentElement.scrollHeight; y += step) {
+      window.scrollTo({ top: y, behavior: "instant" });
+      await new Promise((resolve) => setTimeout(resolve, 120));
+    }
+    window.scrollTo({ top: 0, behavior: "instant" });
+    document.documentElement.style.scrollBehavior = previous;
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  });
+
+  await page.waitForTimeout(2000);
 
   const { scrollW, clientW } = await page.evaluate(() => ({
     scrollW: document.documentElement.scrollWidth,

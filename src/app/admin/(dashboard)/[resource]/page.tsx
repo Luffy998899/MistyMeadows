@@ -47,18 +47,18 @@ export default async function ResourceListPage({ params, searchParams }: Props) 
       </div>
 
       {saved ? (
-        <p role="status" className="mt-6 border-l-2 border-green bg-paper p-4 text-sm">
+        <p role="status" className="mt-6 border-l-2 border-clay bg-paper p-4 text-sm">
           Saved. The website has been updated.
         </p>
       ) : null}
       {deleted ? (
-        <p role="status" className="mt-6 border-l-2 border-green bg-paper p-4 text-sm">
+        <p role="status" className="mt-6 border-l-2 border-clay bg-paper p-4 text-sm">
           Deleted.
         </p>
       ) : null}
 
       {error ? (
-        <p role="alert" className="mt-6 border-l-2 border-burgundy bg-paper p-4 text-sm text-burgundy">
+        <p role="alert" className="mt-6 border-l-2 border-bark bg-paper p-4 text-sm text-bark">
           Could not load: {error.message}
         </p>
       ) : rows.length === 0 ? (
@@ -117,7 +117,7 @@ export default async function ResourceListPage({ params, searchParams }: Props) 
 
                     <td className="p-4">
                       {row.published ? (
-                        <span className="text-green">Live</span>
+                        <span className="text-bark">Live</span>
                       ) : (
                         <span className="text-stone">Hidden</span>
                       )}

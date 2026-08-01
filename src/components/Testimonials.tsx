@@ -1,9 +1,10 @@
+import { Reveal } from "./Reveal";
 import { SectionHeading } from "./SectionHeading";
 import type { Testimonial } from "@/lib/types";
 
 function Stars({ rating }: { rating: number }) {
   return (
-    <p className="flex items-center gap-1 text-green" aria-label={`${rating} out of 5`}>
+    <p className="flex items-center gap-1 text-bark" aria-label={`${rating} out of 5`}>
       {Array.from({ length: 5 }, (_, i) => (
         <svg
           key={i}
@@ -25,7 +26,7 @@ export function Testimonials({ testimonials }: { testimonials: Testimonial[] }) 
   if (testimonials.length === 0) return null;
 
   return (
-    <section className="section bg-paper-warm" aria-labelledby="guests-title">
+    <section className="section on-tan" aria-labelledby="guests-title">
       <div className="shell">
         <SectionHeading
           eyebrow="In their words"
@@ -37,8 +38,13 @@ export function Testimonials({ testimonials }: { testimonials: Testimonial[] }) 
         />
 
         <div className="mt-12 grid gap-x-10 gap-y-12 md:mt-16 md:grid-cols-2 lg:grid-cols-3">
-          {testimonials.map((item) => (
-            <figure key={item.id} className="flex flex-col border-t border-paper-edge pt-6">
+          {testimonials.map((item, i) => (
+            <Reveal
+              as="figure"
+              key={item.id}
+              delay={i * 110}
+              className="flex flex-col border-t border-paper-edge pt-6"
+            >
               <Stars rating={item.rating} />
 
               {item.headline ? (
@@ -49,13 +55,13 @@ export function Testimonials({ testimonials }: { testimonials: Testimonial[] }) 
                 {item.quote}
               </blockquote>
 
-              <figcaption className="mt-5 text-sm font-medium text-ink">
+              <figcaption className="mt-5 text-sm font-medium">
                 {item.author}
                 {item.stay_date ? (
                   <span className="ml-2 font-normal text-stone">{item.stay_date}</span>
                 ) : null}
               </figcaption>
-            </figure>
+            </Reveal>
           ))}
         </div>
       </div>

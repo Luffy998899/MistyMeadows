@@ -26,7 +26,7 @@ export default async function ContactPage() {
       <section className="section pt-0">
         <div className="shell grid gap-12 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-20">
           {/* useSearchParams needs a Suspense boundary during prerender. */}
-          <Suspense fallback={<div className="border-t-2 border-pine pt-8" />}>
+          <Suspense fallback={<div className="border-t-2 border-umber pt-8" />}>
             <EnquiryForm rooms={rooms} />
           </Suspense>
 
@@ -89,7 +89,7 @@ export default async function ContactPage() {
                   href={settings.map_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="link-underline mt-4 inline-block text-sm text-green"
+                  className="link-underline mt-4 inline-block text-sm text-bark"
                 >
                   Open in Google Maps
                 </a>
@@ -97,7 +97,7 @@ export default async function ContactPage() {
             </div>
 
             {Object.values(settings.socials).some(Boolean) ? (
-              <div className="on-pine mt-8 p-6">
+              <div className="on-umber mt-8 p-6">
                 <h2 className="eyebrow">Follow the resort</h2>
                 <SocialLinks socials={settings.socials} className="mt-4" />
               </div>

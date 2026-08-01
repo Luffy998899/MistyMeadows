@@ -4,23 +4,44 @@
   Misty Meadows Resorts — design tokens.
 
   Palette is pulled from the company logo: the three nested peaks are forest
-  green, the wordmark is a deep burgundy. Everything else is a warm paper
+  green, the wordmark is a deep bark. Everything else is a warm paper
   neutral so the (owner-uploaded) photography carries the colour.
 */
+/*
+  Palette.
+
+  The five supplied swatches are used verbatim:
+    #3E362E umber · #865D36 bark · #93785B clay · #AC8968 tan · #A69080 greige
+
+  Three tones are derived from them because the supplied set has no light
+  ground and no tone dark enough for small text on the mid browns — every
+  pairing below is checked against WCAG AA (4.5:1 body, 3:1 large/UI):
+
+    paper       lightest tint, so body copy clears 4.5:1
+    umber-deep  one step under #3E362E, for text on the tan ground
+    stone       #93785B darkened; the swatch itself is only 3.6:1 on paper
+*/
 @theme {
-  --color-paper: #f5f2ea;
-  --color-paper-warm: #ede7da;
-  --color-paper-edge: #ded6c4;
-  --color-ink: #1b1d19;
-  --color-stone: #6e6c61;
-  --color-pine: #0e3a28;
-  --color-pine-deep: #092619;
-  --color-green: #157a4c;
-  --color-burgundy: #7b1e32;
-  --color-mist: #cbd6c8;
+  --color-paper: #f4ede4;
+  /* Light enough that #865D36 emphasis still clears 4.5:1 on it (4.69),
+     which the darker tone this replaced did not (4.44). */
+  --color-paper-warm: #f0e7dc;
+  --color-paper-edge: #cbb6a0;
+
+  --color-ink: #3e362e;        /* supplied */
+  --color-umber: #3e362e;      /* supplied — dark section ground */
+  --color-umber-deep: #2b241e; /* derived — text on tan, deepest ground */
+  --color-bark: #865d36;       /* supplied — emphasis, prices, links */
+  --color-clay: #93785b;       /* supplied — rules and icons */
+  --color-tan: #ac8968;        /* supplied — section ground */
+  --color-greige: #a69080;     /* supplied */
+  --color-almond: #c4ae97;     /* derived — lighter section ground */
+  --color-linen: #d8c6b0;      /* derived — light tone on dark grounds */
+  --color-stone: #6b5a47;      /* derived — muted body copy */
 
   --font-display: var(--font-fraunces), "Iowan Old Style", Georgia, serif;
   --font-body: var(--font-inter-tight), "Helvetica Neue", Arial, sans-serif;
+  --font-script: var(--font-parisienne), "Snell Roundhand", cursive;
 
   /* Type scale — fluid, but with hard floors and ceilings so nothing
      degenerates at 375px or runs away on an ultrawide. */
@@ -72,20 +93,20 @@
     height: auto;
   }
 
-  /* One focus treatment, applied everywhere, visible on both paper and pine. */
+  /* One focus treatment, applied everywhere, visible on both paper and umber. */
   :where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
-    outline: 2px solid var(--color-burgundy);
+    outline: 2px solid var(--color-bark);
     outline-offset: 3px;
     border-radius: 2px;
   }
 
-  .on-pine :where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
-    outline-color: var(--color-mist);
+  .on-umber :where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
+    outline-color: var(--color-linen);
   }
 
   ::selection {
-    background: var(--color-mist);
-    color: var(--color-pine-deep);
+    background: var(--color-linen);
+    color: var(--color-umber-deep);
   }
 }
 
@@ -101,8 +122,8 @@
     color: var(--color-stone);
   }
 
-  .on-pine .eyebrow {
-    color: var(--color-mist);
+  .on-umber .eyebrow {
+    color: var(--color-linen);
   }
 
   /* The signature: a rule interrupted by the logo's three-peak silhouette.
@@ -174,7 +195,7 @@
   }
 
   .btn-solid {
-    background: var(--color-pine);
+    background: var(--color-umber);
     color: var(--color-paper);
   }
 
@@ -186,20 +207,20 @@
   }
 
   .btn-outline:hover {
-    background: var(--color-pine);
-    border-color: var(--color-pine);
+    background: var(--color-umber);
+    border-color: var(--color-umber);
     color: var(--color-paper);
   }
 
-  .on-pine .btn-outline {
+  .on-umber .btn-outline {
     border-color: color-mix(in srgb, var(--color-paper) 38%, transparent);
     color: var(--color-paper);
   }
 
-  .on-pine .btn-outline:hover {
+  .on-umber .btn-outline:hover {
     background: var(--color-paper);
     border-color: var(--color-paper);
-    color: var(--color-pine);
+    color: var(--color-umber);
   }
 
   /* ---- Forms ---------------------------------------------------------- */
@@ -256,19 +277,66 @@
   .font-display { font-family: var(--font-display); }
   .font-body { font-family: var(--font-body); }
 
-  /* Fraunces' soft/wonk axes — the difference between "a serif" and
-     something with a hand in it. Only used on signature lines. */
+  /*
+    The script. Used only on standalone signature lines and as a single
+    accent word inside a display heading — never for anything a reader has
+    to work through. Parisienne sits small on its em box, so it needs
+    ~1.35x and a baseline nudge to sit optically level with Fraunces.
+  */
   .signature {
-    font-family: var(--font-display);
-    font-style: italic;
-    font-variation-settings: "SOFT" 60, "WONK" 1, "opsz" 120;
-    font-weight: 300;
-    letter-spacing: -0.015em;
+    font-family: var(--font-script);
+    font-weight: 400;
+    font-size: 1.35em;
+    line-height: 0.85;
+    letter-spacing: 0.01em;
+    display: inline-block;
+    vertical-align: baseline;
+    transform: translateY(0.06em);
   }
 
-  .on-pine {
-    background: var(--color-pine);
+  /* Fraunces' soft/wonk axes — the difference between "a serif" and
+     something with a hand in it. */
+  .display-soft {
+    font-variation-settings: "SOFT" 55, "WONK" 1;
+  }
+
+  .on-umber {
+    background: var(--color-umber);
     color: var(--color-paper);
+  }
+
+  /*
+    Mid-brown grounds. The default muted tone (--color-stone) only reaches
+    ~2.4:1 on these, so muted text is scoped to umber-deep instead.
+    Almond can carry it at 80% (4.75:1); tan is darker and needs the full
+    strength (4.8:1), so hierarchy there comes from size, not colour.
+  */
+  .on-almond,
+  .on-tan {
+    color: var(--color-umber-deep);
+  }
+
+  .on-almond { background: var(--color-almond); }
+  .on-tan { background: var(--color-tan); }
+
+  .on-almond :where(.text-stone),
+  .on-almond :where(.eyebrow) {
+    color: color-mix(in srgb, var(--color-umber-deep) 80%, transparent);
+  }
+
+  .on-tan :where(.text-stone),
+  .on-tan :where(.eyebrow) {
+    color: var(--color-umber-deep);
+  }
+
+  .on-almond :where(.border-paper-edge),
+  .on-tan :where(.border-paper-edge) {
+    border-color: color-mix(in srgb, var(--color-umber-deep) 26%, transparent);
+  }
+
+  .on-almond :where(.peak-rule),
+  .on-tan :where(.peak-rule) {
+    color: var(--color-umber-deep);
   }
 }
 
@@ -289,7 +357,55 @@
 }
 
 .marquee-track {
-  animation: drift 48s linear infinite;
+  animation: drift 52s linear infinite;
+}
+
+/* Second row runs the other way, so the two read as a current rather than
+   a single sliding strip. */
+.marquee-track-reverse {
+  animation: drift 64s linear infinite reverse;
+}
+
+/*
+  Scroll reveal. Elements start displaced and are released when the
+  IntersectionObserver in <Reveal> marks them visible. `--reveal-delay`
+  staggers siblings.
+
+  The `.js-reveal` guard matters: the hidden state is only applied once
+  the observer has mounted, so with JavaScript unavailable the content
+  stays visible instead of being permanently invisible.
+*/
+.js-reveal [data-reveal] {
+  opacity: 0;
+  transform: translateY(28px);
+}
+
+[data-reveal] {
+  transition:
+    opacity 1s var(--ease-out-soft),
+    transform 1s var(--ease-out-soft);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+/*
+  Must be scoped to .js-reveal too. `[data-reveal="visible"]` alone has
+  specificity (0,1,0) and loses to the (0,2,0) hidden rule above, which
+  would leave every revealed section permanently invisible.
+*/
+.js-reveal [data-reveal="visible"] {
+  opacity: 1;
+  transform: none;
+  will-change: auto;
+}
+
+/* Parallax: the image is over-sized by the scale below, then slid within
+   its frame as the frame crosses the viewport. */
+.parallax-media img,
+.parallax-media video {
+  scale: 1.18;
+  transform: translate3d(0, var(--parallax-y, 0px), 0);
+  will-change: transform;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -301,6 +417,21 @@
     transition-duration: 0.001ms !important;
   }
 
-  .marquee-track { animation: none; transform: none; }
+  .marquee-track,
+  .marquee-track-reverse { animation: none; transform: none; }
+
   .media-zoom:hover img { transform: none; }
+
+  /* Never leave content hidden or displaced when motion is suppressed. */
+  .js-reveal [data-reveal],
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .parallax-media img,
+  .parallax-media video {
+    scale: 1;
+    transform: none;
+  }
 }

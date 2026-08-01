@@ -28,11 +28,11 @@ export function DeleteButton({
     >
       <input type="hidden" name="__resource" value={resourceKey} />
       <input type="hidden" name="__id" value={id} />
-      <button type="submit" className="link-underline text-xs text-burgundy" disabled={pending}>
+      <button type="submit" className="link-underline text-xs text-bark" disabled={pending}>
         {pending ? "Deleting…" : "Delete"}
       </button>
       {state?.error ? (
-        <p role="alert" className="mt-1 text-xs text-burgundy">
+        <p role="alert" className="mt-1 text-xs text-bark">
           {state.error}
         </p>
       ) : null}

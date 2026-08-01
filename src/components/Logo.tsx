@@ -39,20 +39,20 @@ export function Logo({
         <>
           <PeakMark
             className={`h-7 w-auto shrink-0 md:h-8 ${
-              tone === "paper" ? "text-mist" : "text-green"
+              tone === "paper" ? "text-linen" : "text-bark"
             }`}
           />
           <span className="leading-none">
             <span
               className={`block font-display text-[1.0625rem] tracking-tight md:text-[1.1875rem] ${
-                tone === "paper" ? "text-paper" : "text-burgundy"
+                tone === "paper" ? "text-paper" : "text-ink"
               }`}
             >
               Misty Meadows
             </span>
             <span
               className={`mt-0.5 block text-[0.5rem] font-medium uppercase tracking-[0.28em] ${
-                tone === "paper" ? "text-mist" : "text-stone"
+                tone === "paper" ? "text-linen" : "text-stone"
               }`}
             >
               Resorts &amp; Hotels

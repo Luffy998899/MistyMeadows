@@ -49,7 +49,7 @@ export function EnquiryForm({ rooms }: { rooms: Room[] }) {
 
   if (state === "done") {
     return (
-      <div role="status" className="border-t-2 border-green pt-8">
+      <div role="status" className="border-t-2 border-clay pt-8">
         <h2 className="text-h3 font-display">Enquiry sent</h2>
         <p className="mt-3 text-stone">{message}</p>
       </div>
@@ -57,7 +57,7 @@ export function EnquiryForm({ rooms }: { rooms: Room[] }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="border-t-2 border-pine pt-8">
+    <form onSubmit={onSubmit} className="border-t-2 border-umber pt-8">
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <label htmlFor="name" className="field-label">
@@ -152,7 +152,7 @@ export function EnquiryForm({ rooms }: { rooms: Room[] }) {
       </div>
 
       {state === "error" ? (
-        <p role="alert" className="mt-6 border-l-2 border-burgundy pl-4 text-sm text-burgundy">
+        <p role="alert" className="mt-6 border-l-2 border-bark pl-4 text-sm text-bark">
           {message}
         </p>
       ) : null}

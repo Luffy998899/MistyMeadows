@@ -105,7 +105,7 @@ export function MailForm({
                 name="smtp_secure"
                 type="checkbox"
                 defaultChecked={settings?.smtp_secure ?? false}
-                className="mt-1 h-4 w-4 accent-[#157a4c]"
+                className="mt-1 h-4 w-4 accent-[#865d36]"
               />
               <label htmlFor="smtp_secure" className="text-sm">
                 Use implicit TLS
@@ -178,7 +178,7 @@ export function MailForm({
         </div>
 
         {state?.error ? (
-          <p role="alert" className="border-l-2 border-burgundy bg-paper p-4 text-sm text-burgundy">
+          <p role="alert" className="border-l-2 border-bark bg-paper p-4 text-sm text-bark">
             {state.error}
           </p>
         ) : null}
@@ -188,7 +188,7 @@ export function MailForm({
             {pending ? "Saving…" : "Save email settings"}
           </button>
           {state?.message ? (
-            <span role="status" className="text-sm text-green">
+            <span role="status" className="text-sm text-bark">
               {state.message}
             </span>
           ) : null}
@@ -212,7 +212,7 @@ export function MailForm({
         {testResult ? (
           <p
             role="status"
-            className={`mt-3 text-sm ${testResult.ok ? "text-green" : "text-burgundy"}`}
+            className={`mt-3 text-sm ${testResult.ok ? "text-bark" : "text-bark"}`}
           >
             {testResult.message ?? testResult.error}
           </p>

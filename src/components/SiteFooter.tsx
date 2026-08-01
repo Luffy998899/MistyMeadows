@@ -9,19 +9,21 @@ import { SocialLinks } from "./SocialLinks";
 
 export function SiteFooter({ settings }: { settings: SiteSettings }) {
   return (
-    <footer className="on-pine">
+    <footer className="on-umber">
       <div className="shell py-16 md:py-20">
         {/* Signature line — the one place the display face gets to be loud. */}
         <div className="flex flex-col gap-8 border-b border-paper/15 pb-12 md:flex-row md:items-end md:justify-between">
           <div>
-            <PeakMark className="h-9 w-auto text-mist" />
-            <p className="signature mt-5 text-[clamp(2rem,1.4rem+2.4vw,3.25rem)] leading-[1.1] text-paper">
+            <PeakMark className="h-9 w-auto text-linen" />
+            {/* Script needs room for its ascenders and descenders — a tight
+                leading here clips the tails. */}
+            <p className="signature mt-4 text-[clamp(2.5rem,1.7rem+3.2vw,4.25rem)] leading-[1.3] text-linen">
               Rest easy in the hills
             </p>
           </div>
 
           <div className="w-full max-w-sm">
-            <p className="mb-3 text-sm text-mist">
+            <p className="mb-3 text-sm text-linen">
               Seasonal offers and news from the resort, a few times a year.
             </p>
             <NewsletterForm />
@@ -114,7 +116,7 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
                 href={settings.map_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="link-underline mt-4 inline-block text-sm text-mist"
+                className="link-underline mt-4 inline-block text-sm text-linen"
               >
                 Open in Google Maps
               </a>
@@ -122,7 +124,7 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 border-t border-paper/15 pt-8 text-xs text-paper/55 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 border-t border-paper/15 pt-8 text-xs text-paper/70 sm:flex-row sm:items-center sm:justify-between">
           <p>{settings.copyright_text}</p>
           <p>{settings.legal_name}</p>
         </div>

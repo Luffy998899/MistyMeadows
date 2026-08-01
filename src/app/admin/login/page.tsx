@@ -17,7 +17,7 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-dvh items-center justify-center bg-paper-warm px-5 py-16">
       <div className="w-full max-w-sm">
-        <PeakMark className="h-8 w-auto text-green" />
+        <PeakMark className="h-8 w-auto text-clay" />
         <h1 className="text-h2 mt-6">Resort admin</h1>
         <p className="mt-2 text-sm text-stone">
           Sign in to manage rooms, photographs, offers and enquiries.
@@ -28,7 +28,7 @@ export default function LoginPage() {
             <LoginForm />
           </Suspense>
         ) : (
-          <div className="mt-8 border-l-2 border-burgundy bg-paper p-5">
+          <div className="mt-8 border-l-2 border-bark bg-paper p-5">
             <h2 className="font-display text-[1.125rem]">Not connected yet</h2>
             <p className="mt-2 text-sm text-stone">
               Supabase environment variables are missing, so there is nothing to

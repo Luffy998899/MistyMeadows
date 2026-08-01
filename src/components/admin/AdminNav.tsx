@@ -43,7 +43,7 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
                     aria-current={active ? "page" : undefined}
                     className={`block px-3 py-2 text-sm transition-colors ${
                       active
-                        ? "bg-pine text-paper"
+                        ? "bg-umber text-paper"
                         : "text-ink/75 hover:bg-paper-warm hover:text-ink"
                     }`}
                   >
@@ -67,7 +67,7 @@ export function AdminNav({ email, signOut }: { email: string; signOut: React.Rea
       {/* Mobile bar */}
       <div className="sticky top-0 z-30 flex items-center justify-between border-b border-paper-edge bg-paper px-4 py-3 lg:hidden">
         <Link href="/admin" className="flex items-center gap-2.5">
-          <PeakMark className="h-5 w-auto text-green" />
+          <PeakMark className="h-5 w-auto text-clay" />
           <span className="font-display text-[0.9375rem]">Resort admin</span>
         </Link>
         <button
@@ -101,7 +101,7 @@ export function AdminNav({ email, signOut }: { email: string; signOut: React.Rea
       <aside className="hidden w-60 shrink-0 border-r border-paper-edge bg-paper lg:block">
         <div className="sticky top-0 flex h-dvh flex-col p-5">
           <Link href="/admin" className="flex items-center gap-2.5 px-3 py-2">
-            <PeakMark className="h-5 w-auto text-green" />
+            <PeakMark className="h-5 w-auto text-clay" />
             <span className="font-display text-[0.9375rem]">Resort admin</span>
           </Link>
 
