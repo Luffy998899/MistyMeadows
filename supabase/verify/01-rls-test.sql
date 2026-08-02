@@ -21,8 +21,12 @@ insert into public.admin_users (user_id, email, full_name)
 values ('11111111-1111-1111-1111-111111111111', 'owner@example.com', 'Owner')
 on conflict do nothing;
 
--- An unpublished row, to prove drafts stay private.
+-- Unpublished rows, to prove drafts stay private.
 insert into public.rooms (slug, name, published) values ('draft-room', 'Draft Room', false)
+on conflict (slug) do nothing;
+
+insert into public.attractions (slug, name, published)
+values ('draft-attraction', 'Draft Attraction', false)
 on conflict (slug) do nothing;
 
 create or replace function pg_temp.assert(label text, got anyelement, want anyelement)
@@ -42,6 +46,10 @@ select set_config('request.jwt.claim.sub', '', true);
 select pg_temp.assert('anon: is_admin is false', public.is_admin(), false);
 select pg_temp.assert('anon: cannot see drafts',
   (select count(*) from rooms where slug = 'draft-room'), 0::bigint);
+select pg_temp.assert('anon: cannot see draft attractions',
+  (select count(*) from attractions where slug = 'draft-attraction'), 0::bigint);
+select pg_temp.assert('anon: can read published attractions',
+  (select count(*) from attractions where slug = 'kasauli'), 1::bigint);
 select pg_temp.assert('anon: cannot read enquiries',
   (select count(*) from enquiries), 0::bigint);
 select pg_temp.assert('anon: cannot read SMTP credentials',

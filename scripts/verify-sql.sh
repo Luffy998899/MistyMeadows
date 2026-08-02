@@ -49,7 +49,8 @@ counts() {
     "select (select count(*) from rooms)||'/'||(select count(*) from apartments)
           ||'/'||(select count(*) from facilities)||'/'||(select count(*) from dining_items)
           ||'/'||(select count(*) from testimonials)
-          ||'/'||(select count(*) from media)||'/'||(select count(*) from gallery_items);"
+          ||'/'||(select count(*) from media)||'/'||(select count(*) from gallery_items)
+          ||'/'||(select count(*) from attractions);"
 }
 
 echo "→ applying stub, migration and seed"
@@ -57,7 +58,7 @@ psql_quiet "$DB" "$ROOT/supabase/verify/00-supabase-stub.sql"
 for m in "$ROOT"/supabase/migrations/*.sql; do psql_quiet "$DB" "$m"; done
 psql_quiet "$DB" "$ROOT/supabase/seed.sql"
 FIRST=$(counts)
-echo "   rooms/apartments/facilities/dining/testimonials/media/gallery = $FIRST"
+echo "   rooms/apartments/facilities/dining/testimonials/media/gallery/attractions = $FIRST"
 
 echo "→ re-applying to check idempotency"
 for m in "$ROOT"/supabase/migrations/*.sql; do psql_quiet "$DB" "$m"; done

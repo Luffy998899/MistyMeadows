@@ -98,10 +98,10 @@ export default async function ContactPage() {
               ) : null}
             </div>
 
-            {Object.values(settings.socials).some(Boolean) ? (
+            {Object.values(settings.socials).some(Boolean) || settings.whatsapp ? (
               <div className="on-green mt-8 p-6">
                 <h2 className="eyebrow">Follow the resort</h2>
-                <SocialLinks socials={settings.socials} className="mt-4" />
+                <SocialLinks socials={settings.socials} whatsapp={settings.whatsapp} className="mt-4" />
               </div>
             ) : null}
           </aside>

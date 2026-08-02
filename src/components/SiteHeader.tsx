@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { NAV_SPLIT, PRIMARY_NAV, isActive } from "@/lib/nav";
+import { NAV_SPLIT, PRIMARY_NAV, SECONDARY_NAV, isActive } from "@/lib/nav";
 import type { SiteSettings } from "@/lib/types";
 
 import { Logo } from "./Logo";
@@ -57,7 +57,15 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
   const phone = settings.phones[0];
   const email = settings.emails[0];
   const left = PRIMARY_NAV.slice(0, NAV_SPLIT);
-  const right = PRIMARY_NAV.slice(NAV_SPLIT);
+  /*
+    Contact is dropped from the desktop bar: the gold chip beside it goes to
+    the same page and says what it is for. Keeping both overflowed the
+    right-hand column below about 1500px — and because the links are
+    `shrink-0` inside a shrinking flex row, the overflow was silent, with
+    "Contact" rendering underneath the button rather than wrapping. It is
+    still in the mobile panel and the footer.
+  */
+  const right = PRIMARY_NAV.slice(NAV_SPLIT).filter((item) => item.href !== "/contact");
 
   // `shrink-0` matters: without it the nowrap labels are compressed by the
   // flex container at narrow desktop widths and overlap each other.
@@ -86,7 +94,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
 
           <div className="flex items-center gap-6">
             <p className="text-paper/70">{settings.address_lines[0]}</p>
-            <SocialLinks socials={settings.socials} size="sm" />
+            <SocialLinks socials={settings.socials} whatsapp={settings.whatsapp} size="sm" />
           </div>
         </div>
       </div>
@@ -101,7 +109,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
         {/* Desktop: links · logo · links */}
         <div className="shell hidden items-center gap-6 py-3 lg:grid lg:grid-cols-[1fr_auto_1fr]">
           <nav aria-label="Primary">
-            <ul className="flex items-center justify-end gap-x-5 xl:gap-x-7">
+            <ul className="flex shrink-0 items-center justify-end gap-x-5 xl:gap-x-7">
               {left.map((item) => (
                 <li key={item.href} className="shrink-0">
                   <Link
@@ -120,7 +128,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
 
           <div className="flex items-center justify-between gap-5 xl:gap-7">
             <nav aria-label="Primary, continued">
-              <ul className="flex items-center gap-x-5 xl:gap-x-7">
+              <ul className="flex shrink-0 items-center gap-x-5 xl:gap-x-7">
                 {right.map((item) => (
                   <li key={item.href} className="shrink-0">
                     <Link
@@ -139,7 +147,8 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
               href="/contact"
               className="btn btn-gold shrink-0 whitespace-nowrap px-4 py-2.5 text-[0.6875rem] xl:px-5 xl:text-[0.75rem]"
             >
-              Book your stay
+              <span className="2xl:hidden">Book</span>
+              <span className="hidden 2xl:inline">Book your stay</span>
             </Link>
           </div>
         </div>
@@ -195,6 +204,21 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
             ))}
           </ul>
 
+          {/* Gallery and News are not in the desktop header; the panel is
+              the only menu below lg, so they appear here as a quieter row. */}
+          <ul className="mt-5 flex flex-wrap gap-x-6 gap-y-2">
+            {SECONDARY_NAV.map((item) => (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  className="link-underline text-[0.8125rem] uppercase tracking-[0.12em] text-linen"
+                >
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+
           <Link href="/contact" className="btn btn-gold mt-8 w-full">
             Book your stay
           </Link>
@@ -212,7 +236,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
             ))}
           </div>
 
-          <SocialLinks socials={settings.socials} className="mt-6" />
+          <SocialLinks socials={settings.socials} whatsapp={settings.whatsapp} className="mt-6" />
         </nav>
       </div>
     </>

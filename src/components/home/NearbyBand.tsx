@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { MediaFrame } from "@/components/MediaFrame";
 import { PeakGlyph } from "@/components/PeakMark";
 import type { Media } from "@/lib/types";
@@ -71,6 +73,12 @@ export function NearbyBand({ media }: { media?: Media | null }) {
         <div className="flex overflow-hidden">
           <Row reverse />
         </div>
+      </div>
+
+      <div className="shell mt-10 flex justify-center md:mt-12">
+        <Link href="/attractions" className="btn btn-outline">
+          What to see nearby
+        </Link>
       </div>
 
       {/* The rows are decorative; this is what assistive tech reads. */}

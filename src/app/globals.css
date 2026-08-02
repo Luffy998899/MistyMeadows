@@ -419,6 +419,17 @@
      weight against the added colour. */
   .on-mint :where(h2, h3) { color: var(--color-green-deep); }
   .on-blush :where(h2, h3) { color: var(--color-wine-deep); }
+
+  /*
+    Muted body copy is a dark tone, which lands at under 2:1 on the green
+    grounds. Shared components (SectionHeading's lead, for one) are used on
+    both, so the tone is re-scoped here rather than threaded through as a
+    prop everywhere.
+  */
+  .on-green :where(.text-stone),
+  .on-photo :where(.text-stone) {
+    color: var(--color-linen);
+  }
 }
 
 /* ---- Motion ----------------------------------------------------------- */

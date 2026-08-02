@@ -76,7 +76,7 @@ export default async function HomePage() {
           <>
             The valley, from
             <br />
-            every <span className="signature text-gold">window</span>
+            <em className="italic">every window</em>
           </>
         }
         sub={settings.tagline}
