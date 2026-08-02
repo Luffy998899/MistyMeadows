@@ -1,15 +1,17 @@
-import Link from "next/link";
-
-import { BookingBenefits } from "@/components/BookingBenefits";
-import { FacilitiesGrid } from "@/components/FacilitiesGrid";
-import { MediaFrame } from "@/components/MediaFrame";
-import { Parallax } from "@/components/Parallax";
-import { Reveal } from "@/components/Reveal";
-import { RoomRow } from "@/components/RoomCard";
-import { SectionHeading } from "@/components/SectionHeading";
 import { Testimonials } from "@/components/Testimonials";
-import { Hero } from "@/components/home/Hero";
+import { AmenitiesGrid } from "@/components/home/AmenitiesGrid";
+import { AvailabilityBar } from "@/components/home/AvailabilityBar";
+import { CallBand } from "@/components/home/CallBand";
+import { CelebrationsBand } from "@/components/home/CelebrationsBand";
+import { FacilitiesPanel } from "@/components/home/FacilitiesPanel";
+import { FeatureBand } from "@/components/home/FeatureBand";
+import { GalleryStrip } from "@/components/home/GalleryStrip";
+import { HeroSlider } from "@/components/home/HeroSlider";
 import { NearbyBand } from "@/components/home/NearbyBand";
+import { NewsletterBand } from "@/components/home/NewsletterBand";
+import { PanoramaBand } from "@/components/home/PanoramaBand";
+import { QuoteBand } from "@/components/home/QuoteBand";
+import { WelcomeBand } from "@/components/home/WelcomeBand";
 import {
   getDining,
   getFacilities,
@@ -18,6 +20,7 @@ import {
   getSettings,
   getTestimonials,
 } from "@/lib/content";
+import { HERO_SLIDES, IMAGES } from "@/lib/media-library";
 
 export default async function HomePage() {
   const [settings, rooms, facilities, dining, testimonials, gallery] = await Promise.all([
@@ -31,174 +34,130 @@ export default async function HomePage() {
 
   const amenities = facilities.filter((f) => f.category === "facility");
   const benefits = facilities.filter((f) => f.category === "booking_benefit");
-  const thalis = dining.filter((d) => d.category === "thali");
 
-  // Gallery uploads double as the secondary hero plate and the backdrop for
-  // the drifting band, so those compositions fill in on their own as the
-  // owner adds photographs.
-  const [firstGallery, secondGallery] = gallery;
+  /*
+    Every band prefers an owner-managed picture and falls back to the
+    photograph shipped for that slot, so the page is never short of imagery
+    but the admin panel still wins wherever it has been used.
+  */
+  const heroSlides = gallery
+    .filter((g) => g.category === "hero" && g.media)
+    .map((g) => g.media!);
+  const slides = heroSlides.length > 0 ? heroSlides : HERO_SLIDES;
+
+  // The slider photographs are already the top of the page, so the strip
+  // draws from everything else the owner has published.
+  const galleryPlates = gallery
+    .filter((g) => g.media && g.category !== "hero")
+    .map((g) => g.media!);
+  const strip =
+    galleryPlates.length >= 8
+      ? galleryPlates
+      : [
+          IMAGES.suiteLounge,
+          IMAGES.terraceValley,
+          IMAGES.restaurantHall,
+          IMAGES.roomTerrace,
+          IMAGES.celebrations,
+          IMAGES.roomOutlook,
+          IMAGES.restaurantTable,
+          IMAGES.welcome,
+        ];
+
+  const roomsImage = rooms[0]?.image ?? IMAGES.roomLuxury;
+  const diningImage = dining.find((d) => d.image)?.image ?? IMAGES.restaurantHall;
 
   return (
     <>
-      <Hero settings={settings} secondary={firstGallery?.media} />
+      <HeroSlider
+        slides={slides}
+        eyebrow={settings.legal_name}
+        headline={
+          <>
+            The valley, from
+            <br />
+            every <span className="signature text-gold">window</span>
+          </>
+        }
+        sub={settings.tagline}
+      />
 
-      {/* The resort, in its own words */}
-      <section className="section" aria-labelledby="about-title">
-        <div className="shell grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-20">
-          <Reveal className="lg:sticky lg:top-28">
-            <SectionHeading
-              eyebrow="The resort"
-              title={<span id="about-title">A quiet property, high in the pine</span>}
-            />
-            <Link href="/about" className="btn btn-outline mt-8">
-              More about us
-            </Link>
-          </Reveal>
+      <AvailabilityBar />
 
-          <Reveal delay={120}>
-            <p className="text-lead text-stone">{settings.intro}</p>
+      <WelcomeBand settings={settings} media={settings.hero_media ?? IMAGES.welcome} />
 
-            {/* Drive times only — the elevation is already stated in the hero,
-                and repeating it here would just be a stat row. */}
-            <dl className="mt-10 grid grid-cols-2 gap-x-8 gap-y-6 border-t border-paper-edge pt-8">
-              {[
-                ["From Chandigarh", "1 hr 30 min"],
-                ["From Delhi", "5 hr 30 min"],
-              ].map(([label, value]) => (
-                <div key={label}>
-                  <dt className="eyebrow">{label}</dt>
-                  <dd className="mt-2 font-display text-[1.375rem] text-ink">{value}</dd>
-                </div>
-              ))}
-            </dl>
-          </Reveal>
-        </div>
-      </section>
+      <FeatureBand
+        id="rooms"
+        eyebrow="Luxurious"
+        title="Rooms & Suites"
+        body="Five ways to stay, and every one of them faces the valley. Balconies wide enough to eat breakfast on, terraces that look straight down the pine slopes, and a premium suite with its own sitting room for a family travelling together."
+        href="/rooms"
+        cta="See the rooms"
+        media={roomsImage}
+        side="right"
+        accent={["Valley view", "Private balcony", "Room service", "Wi-Fi"]}
+      />
 
-      <NearbyBand media={secondGallery?.media ?? settings.hero_media} />
+      <FeatureBand
+        id="glance"
+        eyebrow="At a glance"
+        title="A resort at 5,800 feet"
+        body="Kumarhatti sits on the Nahan road just below Kasauli — an hour and a half from Chandigarh, five and a half from Delhi. Close enough for a weekend, far enough that the only thing you hear at night is the wind through the pines."
+        href="/about"
+        cta="Explore more"
+        media={IMAGES.heroHillside}
+        side="left"
+      />
 
-      {/* Rooms — an index, not a card grid */}
-      <section className="section" aria-labelledby="rooms-title">
-        <div className="shell">
-          <Reveal className="flex flex-wrap items-end justify-between gap-6">
-            <SectionHeading
-              eyebrow="Rooms & suites"
-              title={<span id="rooms-title">Five ways to stay</span>}
-              lead="Every room looks onto the valley. The difference is how much space you have to look from."
-            />
-            <Link href="/rooms" className="btn btn-outline">
-              All rooms
-            </Link>
-          </Reveal>
+      <PanoramaBand
+        media={IMAGES.panorama}
+        caption="The entrance, the gardens and the old sandstone carving by the door"
+      />
 
-          <div className="mt-14 space-y-16 md:mt-20 md:space-y-24">
-            {rooms.slice(0, 3).map((room, i) => (
-              <Reveal key={room.id}>
-                <RoomRow room={room} index={i} />
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
+      <QuoteBand>
+        Surrounded by tall pine and spectacular mountains, the resort offers
+        majestic views of the valley from every room — a peaceful place to
+        unwind, relax and take your time over it.
+      </QuoteBand>
 
-      {/* Facilities */}
-      {amenities.length > 0 ? (
-        <section className="section on-almond" aria-labelledby="facilities-title">
-          <div className="shell">
-            <Reveal>
-              <SectionHeading
-                eyebrow="On the property"
-                title={<span id="facilities-title">What is here</span>}
-              />
-            </Reveal>
-            <div className="mt-12">
-              <FacilitiesGrid facilities={amenities} />
-            </div>
-          </div>
-        </section>
-      ) : null}
+      <FeatureBand
+        id="terrace"
+        eyebrow="An open-air table"
+        title="The valley terrace"
+        body="Tables set out on the open terrace, the whole valley below them, and the kitchen sending out Indian, Chinese and Continental all day. It is where most guests end up for breakfast, and where they stay until it gets cold."
+        href="/dining"
+        cta="Dining & rates"
+        media={IMAGES.terraceValley}
+        side="right"
+        ground="on-mint"
+      />
 
-      {/* Dining */}
-      {thalis.length > 0 ? (
-        <section className="section" aria-labelledby="dining-title">
-          <div className="shell grid items-center gap-10 lg:grid-cols-2 lg:gap-20">
-            <Reveal>
-              <Parallax>
-                <MediaFrame
-                  media={thalis[0]?.image}
-                  ratio="4 / 3"
-                  sizes="(max-width: 1024px) 100vw, 45vw"
-                  zoom
-                />
-              </Parallax>
-            </Reveal>
+      <FeatureBand
+        id="restaurant"
+        eyebrow="Multi-cuisine"
+        title="The restaurant"
+        body="A hundred covers under the valley windows, a fixed thali at the centre of the menu, and day-picnic packages for groups coming up for the afternoon. Vegetarian and non-vegetarian, priced plainly."
+        href="/dining"
+        cta="See the menu rates"
+        media={diningImage}
+        side="left"
+      />
 
-            <Reveal delay={120}>
-              <SectionHeading
-                eyebrow="Dining"
-                title={
-                  <span id="dining-title">
-                    Thalis, served <span className="signature text-bark">all day</span>
-                  </span>
-                }
-                lead="A multi-cuisine kitchen with a fixed thali at its centre — the thing most guests end up ordering twice."
-              />
+      <CelebrationsBand media={IMAGES.celebrations} />
 
-              <ul className="mt-9 border-t border-paper-edge">
-                {thalis.map((item) => (
-                  <li key={item.id} className="border-b border-paper-edge py-5">
-                    <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-                      <h3 className="font-display text-[1.25rem]">{item.name}</h3>
-                      {item.price_note ? (
-                        <p className="text-sm text-bark">{item.price_note}</p>
-                      ) : null}
-                    </div>
-                    <p className="mt-1.5 text-sm text-stone">{item.detail}</p>
-                  </li>
-                ))}
-              </ul>
+      <FacilitiesPanel facilities={amenities} media={IMAGES.roomBalcony} />
 
-              <Link href="/dining" className="btn btn-outline mt-8">
-                Dining &amp; picnic rates
-              </Link>
-            </Reveal>
-          </div>
-        </section>
-      ) : null}
+      <NearbyBand media={IMAGES.heroPines} />
+
+      <GalleryStrip images={strip} />
 
       <Testimonials testimonials={testimonials} />
 
-      <BookingBenefits benefits={benefits} note={settings.booking_note} />
+      <AmenitiesGrid benefits={benefits} note={settings.booking_note} />
 
-      {/* Closing call to action */}
-      <section className="on-umber section" aria-labelledby="enquire-title">
-        <div className="shell max-w-3xl">
-          <Reveal>
-            <p className="eyebrow">Reservations</p>
-            <h2 id="enquire-title" className="text-h1 display-soft mt-5">
-              Tell us when you would like to come{" "}
-              <span className="signature text-linen">up</span>
-            </h2>
-            <p className="text-lead mt-6 text-paper/75">
-              Send us your dates and we will come back with availability and the
-              best rate we can do — usually the same day.
-            </p>
-            <div className="mt-9 flex flex-wrap gap-3">
-              <Link href="/contact" className="btn btn-outline">
-                Enquire about a stay
-              </Link>
-              {settings.phones[0] ? (
-                <a
-                  href={`tel:${settings.phones[0].replace(/\s/g, "")}`}
-                  className="btn btn-outline"
-                >
-                  {settings.phones[0]}
-                </a>
-              ) : null}
-            </div>
-          </Reveal>
-        </div>
-      </section>
+      <CallBand settings={settings} />
+
+      <NewsletterBand />
     </>
   );
 }

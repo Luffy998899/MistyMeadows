@@ -1,15 +1,17 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Inter_Tight, Parisienne } from "next/font/google";
+import { Cormorant_Garamond, Inter_Tight, Parisienne } from "next/font/google";
 
 import "./globals.css";
 
-// Display face. The SOFT and WONK axes are what stop this reading as a
-// stock serif — they are used on the signature lines only.
-const fraunces = Fraunces({
+// Display face. The reference sets every heading in a high-contrast old-style
+// serif; Cormorant Garamond is the closest free equivalent, and its lighter
+// weights are what let the big centred headings stay elegant rather than
+// shouty.
+const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-fraunces",
-  axes: ["SOFT", "WONK"],
+  variable: "--font-cormorant",
+  weight: ["300", "400", "500", "600"],
   style: ["normal", "italic"],
 });
 
@@ -45,7 +47,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#3e362e",
+  themeColor: "#08402a",
   width: "device-width",
   initialScale: 1,
 };
@@ -54,7 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en-IN"
-      className={`${fraunces.variable} ${interTight.variable} ${parisienne.variable}`}
+      className={`${cormorant.variable} ${interTight.variable} ${parisienne.variable}`}
     >
       <body>{children}</body>
     </html>

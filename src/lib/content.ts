@@ -4,6 +4,7 @@ import {
   DEMO_APARTMENTS,
   DEMO_DINING,
   DEMO_FACILITIES,
+  DEMO_GALLERY,
   DEMO_ROOMS,
   DEMO_SETTINGS,
   DEMO_TESTIMONIALS,
@@ -118,7 +119,7 @@ export const getTestimonials = cache(
 
 export const getGallery = cache(
   (): Promise<GalleryItem[]> =>
-    listPublished("gallery_items", "*, media:media_id(*)", []),
+    listPublished("gallery_items", "*, media:media_id(*)", DEMO_GALLERY),
 );
 
 export const getOffers = cache(

@@ -6,6 +6,7 @@ import { PageHero } from "@/components/PageHero";
 import { SectionHeading } from "@/components/SectionHeading";
 import { Testimonials } from "@/components/Testimonials";
 import { getSettings, getTestimonials } from "@/lib/content";
+import { IMAGES } from "@/lib/media-library";
 
 export const metadata: Metadata = {
   title: "About",
@@ -25,9 +26,10 @@ export default async function AboutPage() {
             In the lap of <span className="signature">nature</span>
           </>
         }
+        media={IMAGES.panorama}
       />
 
-      <section className="section pt-0">
+      <section className="section">
         <div className="shell grid gap-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-20">
           <div>
             <p className="text-lead text-stone">{settings.intro}</p>
@@ -48,7 +50,7 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <section id="location" className="section scroll-mt-24 bg-paper-warm">
+      <section id="location" className="section on-cream scroll-mt-24">
         <div className="shell grid gap-12 lg:grid-cols-2 lg:gap-20">
           <div>
             <SectionHeading eyebrow="Location" title="Getting here" />

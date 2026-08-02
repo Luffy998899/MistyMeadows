@@ -80,7 +80,7 @@ export default async function SettingsPage() {
         />
 
         {!process.env.SUPABASE_SERVICE_ROLE_KEY ? (
-          <p className="mt-6 border-l-2 border-bark bg-paper p-4 text-sm text-bark">
+          <p className="mt-6 border-l-2 border-wine bg-paper p-4 text-sm text-wine">
             SUPABASE_SERVICE_ROLE_KEY is not set on the server, so email
             settings cannot be read or saved. Add it to your environment and
             restart.

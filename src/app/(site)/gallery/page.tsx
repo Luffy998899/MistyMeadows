@@ -4,6 +4,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { MediaFrame } from "@/components/MediaFrame";
 import { PageHero } from "@/components/PageHero";
 import { getGallery } from "@/lib/content";
+import { IMAGES } from "@/lib/media-library";
 
 export const metadata: Metadata = {
   title: "Gallery",
@@ -24,9 +25,10 @@ export default async function GalleryPage() {
         eyebrow="Gallery"
         title="The property, photographed"
         lead="Rooms, the valley, and the grounds."
+        media={IMAGES.heroValley}
       />
 
-      <section className="section pt-0">
+      <section className="section">
         <div className="shell">
           {items.length === 0 ? (
             <EmptyState

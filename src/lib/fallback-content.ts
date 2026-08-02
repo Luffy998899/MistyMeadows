@@ -1,7 +1,9 @@
+import { IMAGES } from "./media-library";
 import type {
   Apartment,
   DiningItem,
   Facility,
+  GalleryItem,
   Room,
   SiteSettings,
   Testimonial,
@@ -15,7 +17,9 @@ import type {
  * `.env.local` is filled in, every one of these is replaced by live rows and
  * this file stops being read.
  *
- * Copy is transcribed from the live mistymeadowsresorts.com pages.
+ * Copy is transcribed from the live mistymeadowsresorts.com pages;
+ * photography comes from `media-library.ts`, i.e. the files committed under
+ * `public/media/`.
  */
 
 export const DEMO_SETTINGS: SiteSettings = {
@@ -41,7 +45,8 @@ export const DEMO_SETTINGS: SiteSettings = {
   logo_media_id: null,
   copyright_text: "Copyright 2021 Misty Meadows Resorts. All Rights Reserved",
   booking_note: "Book direct with the resort for the best available rate.",
-  hero_media: null,
+  // The welcome band's arched plate. Owner uploads replace it from Settings.
+  hero_media: IMAGES.welcome,
   logo_media: null,
 };
 
@@ -53,6 +58,7 @@ const room = (
   max_guests: number,
   features: string[],
   sort_order: number,
+  image: Room["image"],
 ): Room => ({
   id: slug,
   slug,
@@ -68,7 +74,7 @@ const room = (
   gallery_ids: [],
   sort_order,
   published: true,
-  image: null,
+  image,
 });
 
 export const DEMO_ROOMS: Room[] = [
@@ -80,6 +86,7 @@ export const DEMO_ROOMS: Room[] = [
     2,
     ["Valley view", "Private balcony", "Seating area", "Room service"],
     1,
+    IMAGES.roomLuxury,
   ),
   room(
     "deluxe-room",
@@ -89,6 +96,7 @@ export const DEMO_ROOMS: Room[] = [
     2,
     ["Hill view", "Quiet wing", "Room service"],
     2,
+    IMAGES.roomDeluxe,
   ),
   room(
     "superior-room-balcony",
@@ -98,6 +106,7 @@ export const DEMO_ROOMS: Room[] = [
     2,
     ["Valley view", "Wide balcony", "Seating area", "Room service"],
     3,
+    IMAGES.roomSuperior,
   ),
   room(
     "luxury-room-terrace",
@@ -107,6 +116,7 @@ export const DEMO_ROOMS: Room[] = [
     2,
     ["Private terrace", "Valley view", "Seating area", "Room service"],
     4,
+    IMAGES.roomTerrace,
   ),
   room(
     "premium-suite",
@@ -116,6 +126,7 @@ export const DEMO_ROOMS: Room[] = [
     4,
     ["Separate living area", "Valley view", "Balcony", "Room service"],
     5,
+    IMAGES.suiteLounge,
   ),
 ];
 
@@ -134,7 +145,7 @@ export const DEMO_APARTMENTS: Apartment[] = [
   image_id: null,
   sort_order: i + 1,
   published: true,
-  image: null,
+  image: [IMAGES.suiteBed, IMAGES.roomEvening, IMAGES.roomOutlook, IMAGES.roomDeluxe, IMAGES.roomSuperior][i] ?? null,
 }));
 
 export const DEMO_FACILITIES: Facility[] = [
@@ -142,11 +153,11 @@ export const DEMO_FACILITIES: Facility[] = [
   ["facility", "Conference Room", "Meeting and conference space for corporate offsites.", "conference"],
   ["facility", "Clubhouse", "Indoor games including table tennis, plus a gym.", "clubhouse"],
   ["facility", "Parking Space", "On-site parking for residents and day guests.", "parking"],
-  ["booking_benefit", "No booking fee", "Book direct and pay no reservation charge.", "peak"],
-  ["booking_benefit", "Best rate guarantee", "The lowest available rate, direct from the resort.", "peak"],
-  ["booking_benefit", "Reservations 24/7", "Reach the front desk at any hour.", "peak"],
-  ["booking_benefit", "High-speed Wi-Fi", "Complimentary across the property.", "peak"],
-  ["booking_benefit", "Flexible amendments", "Support in case of cancellation or amendment.", "peak"],
+  ["booking_benefit", "No booking fee", "Book direct and pay no reservation charge.", "tag"],
+  ["booking_benefit", "Best rate guarantee", "The lowest available rate, direct from the resort.", "rate"],
+  ["booking_benefit", "Reservations 24/7", "Reach the front desk at any hour.", "clock"],
+  ["booking_benefit", "High-speed Wi-Fi", "Complimentary across the property.", "wifi"],
+  ["booking_benefit", "Flexible amendments", "Support in case of cancellation or amendment.", "calendar"],
 ].map(([category, name, description, icon], i) => ({
   id: `fac-${i}`,
   category: category as Facility["category"],
@@ -158,11 +169,11 @@ export const DEMO_FACILITIES: Facility[] = [
 }));
 
 export const DEMO_DINING: DiningItem[] = [
-  ["thali", "Veg Thali", "Dal makhani, mix vegetable, rice, salad, roti, raita", "350 + GST per thali"],
-  ["thali", "Non-Veg Thali", "Murg makhani, mix vegetable, rice, salad, roti, raita", "450 + GST per thali"],
-  ["picnic", "Day Picnic — Vegetarian", "Day picnic package, per person", "1600 + tax"],
-  ["picnic", "Day Picnic — Non-Vegetarian", "Day picnic package, per person", "2100 + tax"],
-].map(([category, name, detail, price_note], i) => ({
+  ["thali", "Veg Thali", "Dal makhani, mix vegetable, rice, salad, roti, raita", "350 + GST per thali", IMAGES.restaurantHall],
+  ["thali", "Non-Veg Thali", "Murg makhani, mix vegetable, rice, salad, roti, raita", "450 + GST per thali", IMAGES.restaurantTable],
+  ["picnic", "Day Picnic — Vegetarian", "Day picnic package, per person", "1600 + tax", IMAGES.terraceValley],
+  ["picnic", "Day Picnic — Non-Vegetarian", "Day picnic package, per person", "2100 + tax", IMAGES.celebrations],
+].map(([category, name, detail, price_note, image], i) => ({
   id: `din-${i}`,
   category: category as string,
   name: name as string,
@@ -171,7 +182,7 @@ export const DEMO_DINING: DiningItem[] = [
   image_id: null,
   sort_order: i + 1,
   published: true,
-  image: null,
+  image: image as DiningItem["image"],
 }));
 
 export const DEMO_TESTIMONIALS: Testimonial[] = [
@@ -179,7 +190,7 @@ export const DEMO_TESTIMONIALS: Testimonial[] = [
     author: "Vijendra Kaushik",
     headline: "Beautiful Property",
     quote:
-      "Beautiful property nestled in the hills. Each room had a huge balcony with an excellent view. Went there to celebrate my wife's 40th birthday with our entire family. The service was outstanding. The staff was very courteous and efficient. We were 20 people in total along with drivers and maids. All our staff was also accommodated (we had requested for the same on booking).",
+      "Beautiful property nestled in the hills. Each room had a huge balcony with an excellent view. Went there to celebrate my wife's 40th birthday with our entire family. The service was outstanding. The staff was very courteous and efficient.",
   },
   {
     author: "Rehana",
@@ -191,7 +202,7 @@ export const DEMO_TESTIMONIALS: Testimonial[] = [
     author: "Pulkit Kumar",
     headline: "Amazing Services",
     quote:
-      "We were a group of 7 people and had a lovely time here. The hospitality is top-notch. Rooms were very spacious and I have never seen such big balconies where you can even party privately if you are in a group. Food was amazing. The view from the balcony is amazing. The resort has a gym, table tennis and more. We are surely going to visit there again.",
+      "We were a group of 7 people and had a lovely time here. The hospitality is top-notch. Rooms were very spacious and I have never seen such big balconies. Food was amazing, and the view from the balcony is amazing.",
   },
 ].map((t, i) => ({
   id: `test-${i}`,
@@ -203,4 +214,41 @@ export const DEMO_TESTIMONIALS: Testimonial[] = [
   stay_date: null,
   sort_order: i + 1,
   published: true,
+}));
+
+/**
+ * The gallery, grouped the way the gallery page filters it. `hero` is a
+ * category in its own right so the owner can decide what opens the site
+ * without touching the slider component.
+ */
+export const DEMO_GALLERY: GalleryItem[] = (
+  [
+    ["hero", "Bougainvillea over the valley", IMAGES.heroValley],
+    ["hero", "The resort forecourt", IMAGES.heroFront],
+    ["hero", "Pine slopes below the property", IMAGES.heroPines],
+    ["hero", "Misty Meadows from across the valley", IMAGES.heroHillside],
+    ["resort", "Cloud through the pines", IMAGES.welcome],
+    ["resort", "The entrance and gardens", IMAGES.panorama],
+    ["rooms", "Luxury room", IMAGES.roomLuxury],
+    ["rooms", "Luxury room with terrace", IMAGES.roomTerrace],
+    ["rooms", "Superior room", IMAGES.roomSuperior],
+    ["rooms", "Room with balcony", IMAGES.roomBalcony],
+    ["rooms", "Premium suite, sitting room", IMAGES.suiteLounge],
+    ["rooms", "Premium suite", IMAGES.suiteBed],
+    ["rooms", "Deluxe room", IMAGES.roomDeluxe],
+    ["rooms", "A room in the evening", IMAGES.roomEvening],
+    ["rooms", "Balcony outlook", IMAGES.roomOutlook],
+    ["dining", "The restaurant", IMAGES.restaurantHall],
+    ["dining", "Laid for lunch", IMAGES.restaurantTable],
+    ["dining", "A table on the terrace", IMAGES.terraceValley],
+    ["events", "The terrace at dusk", IMAGES.celebrations],
+  ] as const
+).map(([category, caption, media], i) => ({
+  id: `gal-${i}`,
+  media_id: media.id,
+  caption,
+  category,
+  sort_order: i + 1,
+  published: true,
+  media,
 }));

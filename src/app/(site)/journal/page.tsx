@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { MediaFrame } from "@/components/MediaFrame";
 import { PageHero } from "@/components/PageHero";
 import { getPosts } from "@/lib/content";
+import { IMAGES } from "@/lib/media-library";
 
 export const metadata: Metadata = {
   title: "News & Events",
@@ -31,9 +32,10 @@ export default async function JournalPage() {
         eyebrow="News & events"
         title="From the resort"
         lead="What is happening on the property, and what is coming up."
+        media={IMAGES.heroPines}
       />
 
-      <section className="section pt-0">
+      <section className="section">
         <div className="shell">
           {posts.length === 0 ? (
             <EmptyState
@@ -87,7 +89,7 @@ export default async function JournalPage() {
                             ? ` · ${formatDate(post.event_date ?? post.published_at)}`
                             : ""}
                         </p>
-                        <h2 className="text-h3 mt-2 font-display group-hover:text-bark">
+                        <h2 className="text-h3 mt-2 font-display group-hover:text-wine">
                           {post.title}
                         </h2>
                         <p className="mt-2 text-sm text-stone">{post.excerpt}</p>

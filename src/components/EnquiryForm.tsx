@@ -8,13 +8,17 @@ import type { Room } from "@/lib/types";
 type State = "idle" | "sending" | "done" | "error";
 
 /**
- * The enquiry form. Pre-selects a room when arriving from a room page
- * (`/contact?room=Luxury Room`) or an offer (`?offer=...`).
+ * The enquiry form. Pre-fills from whatever the guest has already told us:
+ * a room page (`/contact?room=Luxury Room`), an offer (`?offer=...`), or the
+ * availability bar on the home page (`?check_in=&check_out=&guests=`).
  */
 export function EnquiryForm({ rooms }: { rooms: Room[] }) {
   const params = useSearchParams();
   const presetRoom = params.get("room") ?? "";
   const presetOffer = params.get("offer");
+  const presetIn = params.get("check_in") ?? "";
+  const presetOut = params.get("check_out") ?? "";
+  const presetGuests = params.get("guests") ?? "2";
 
   const [state, setState] = useState<State>("idle");
   const [message, setMessage] = useState("");
@@ -49,7 +53,7 @@ export function EnquiryForm({ rooms }: { rooms: Room[] }) {
 
   if (state === "done") {
     return (
-      <div role="status" className="border-t-2 border-clay pt-8">
+      <div role="status" className="border-t-2 border-gold pt-8">
         <h2 className="text-h3 font-display">Enquiry sent</h2>
         <p className="mt-3 text-stone">{message}</p>
       </div>
@@ -57,7 +61,7 @@ export function EnquiryForm({ rooms }: { rooms: Room[] }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="border-t-2 border-umber pt-8">
+    <form onSubmit={onSubmit} className="border-t-2 border-green-ink pt-8">
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <label htmlFor="name" className="field-label">
@@ -91,14 +95,28 @@ export function EnquiryForm({ rooms }: { rooms: Room[] }) {
           <label htmlFor="check_in" className="field-label">
             Check in
           </label>
-          <input id="check_in" name="check_in" type="date" min={today} className="field" />
+          <input
+            id="check_in"
+            name="check_in"
+            type="date"
+            min={today}
+            defaultValue={presetIn}
+            className="field"
+          />
         </div>
 
         <div>
           <label htmlFor="check_out" className="field-label">
             Check out
           </label>
-          <input id="check_out" name="check_out" type="date" min={today} className="field" />
+          <input
+            id="check_out"
+            name="check_out"
+            type="date"
+            min={presetIn || today}
+            defaultValue={presetOut}
+            className="field"
+          />
         </div>
 
         <div>
@@ -111,7 +129,7 @@ export function EnquiryForm({ rooms }: { rooms: Room[] }) {
             type="number"
             min={1}
             max={60}
-            defaultValue={2}
+            defaultValue={presetGuests}
             className="field"
           />
         </div>
@@ -152,7 +170,7 @@ export function EnquiryForm({ rooms }: { rooms: Room[] }) {
       </div>
 
       {state === "error" ? (
-        <p role="alert" className="mt-6 border-l-2 border-bark pl-4 text-sm text-bark">
+        <p role="alert" className="mt-6 border-l-2 border-wine pl-4 text-sm text-wine">
           {message}
         </p>
       ) : null}

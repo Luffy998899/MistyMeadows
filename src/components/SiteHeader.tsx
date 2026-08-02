@@ -4,16 +4,23 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { PRIMARY_NAV } from "@/lib/nav";
+import { NAV_SPLIT, PRIMARY_NAV, isActive } from "@/lib/nav";
 import type { SiteSettings } from "@/lib/types";
 
 import { Logo } from "./Logo";
+import { SocialLinks } from "./SocialLinks";
 
 /**
- * The header always sits on paper — the hero opens on a paper column rather
- * than a full-bleed photograph, so ink-on-paper is the only legible
- * treatment. The only thing scrolling changes is the hairline rule, which
- * appears once the page has moved under it.
+ * Two bars, as on the reference.
+ *
+ * The upper one is a thin green utility strip carrying the phone number,
+ * the address line and the social icons; it scrolls away. The lower one is
+ * the navigation, and it sticks: the brand lockup is centred with the links
+ * split either side of it, and a gold "Book your stay" chip sits at the
+ * right-hand end.
+ *
+ * Below `lg` the split arrangement has nowhere to go, so it collapses to the
+ * usual inline logo plus a full-screen panel.
  */
 export function SiteHeader({ settings }: { settings: SiteSettings }) {
   const pathname = usePathname();
@@ -48,58 +55,109 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
   }, [menuOpen]);
 
   const phone = settings.phones[0];
+  const email = settings.emails[0];
+  const left = PRIMARY_NAV.slice(0, NAV_SPLIT);
+  const right = PRIMARY_NAV.slice(NAV_SPLIT);
+
+  // `shrink-0` matters: without it the nowrap labels are compressed by the
+  // flex container at narrow desktop widths and overlap each other.
+  const linkClass = (href: string) =>
+    `link-underline block shrink-0 whitespace-nowrap text-[0.6875rem] uppercase tracking-[0.1em] transition-colors xl:text-[0.75rem] ${
+      isActive(pathname, href) ? "font-medium text-wine" : "text-ink/80 hover:text-wine"
+    }`;
 
   return (
     <>
-      <header
-        className={`fixed inset-x-0 top-0 z-50 bg-paper/95 backdrop-blur-sm transition-colors duration-300 ${
-          scrolled || menuOpen ? "border-b border-paper-edge/70" : "border-b border-transparent"
-        }`}
-      >
-        <div className="shell flex h-[72px] items-center justify-between gap-4 md:h-20">
-          <Logo settings={settings} tone="ink" />
-
-          <nav aria-label="Primary" className="hidden lg:block">
-            <ul className="flex items-center gap-7">
-              {PRIMARY_NAV.map((item) => {
-                const active = pathname.startsWith(item.href);
-                return (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      aria-current={active ? "page" : undefined}
-                      className={`link-underline text-[0.8125rem] tracking-wide text-ink/75 transition-colors hover:text-ink ${
-                        active ? "font-medium text-ink" : ""
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
-
-          <div className="flex items-center gap-3">
+      {/* Utility strip */}
+      <div className="on-green hidden lg:block">
+        <div className="shell flex h-10 items-center justify-between gap-6 text-[0.75rem]">
+          <div className="flex items-center gap-6 text-paper/85">
             {phone ? (
-              <a
-                href={`tel:${phone.replace(/\s/g, "")}`}
-                className="hidden text-[0.8125rem] tracking-wide text-stone hover:text-ink xl:inline"
-              >
+              <a href={`tel:${phone.replace(/\s/g, "")}`} className="link-underline">
                 {phone}
               </a>
             ) : null}
+            {email ? (
+              <a href={`mailto:${email}`} className="link-underline">
+                {email}
+              </a>
+            ) : null}
+          </div>
 
-            <Link href="/contact" className="btn btn-solid hidden sm:inline-flex">
-              Enquire
+          <div className="flex items-center gap-6">
+            <p className="text-paper/70">{settings.address_lines[0]}</p>
+            <SocialLinks socials={settings.socials} size="sm" />
+          </div>
+        </div>
+      </div>
+
+      <header
+        className={`sticky top-0 z-50 bg-paper/95 backdrop-blur-sm transition-shadow duration-300 ${
+          scrolled || menuOpen
+            ? "border-b border-paper-edge shadow-[0_10px_30px_-28px_rgb(8_64_42/0.7)]"
+            : "border-b border-paper-edge/50"
+        }`}
+      >
+        {/* Desktop: links · logo · links */}
+        <div className="shell hidden items-center gap-6 py-3 lg:grid lg:grid-cols-[1fr_auto_1fr]">
+          <nav aria-label="Primary">
+            <ul className="flex items-center justify-end gap-x-5 xl:gap-x-7">
+              {left.map((item) => (
+                <li key={item.href} className="shrink-0">
+                  <Link
+                    href={item.href}
+                    aria-current={isActive(pathname, item.href) ? "page" : undefined}
+                    className={linkClass(item.href)}
+                  >
+                    {item.short ?? item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <Logo settings={settings} className="mx-4 shrink-0 xl:mx-8" />
+
+          <div className="flex items-center justify-between gap-5 xl:gap-7">
+            <nav aria-label="Primary, continued">
+              <ul className="flex items-center gap-x-5 xl:gap-x-7">
+                {right.map((item) => (
+                  <li key={item.href} className="shrink-0">
+                    <Link
+                      href={item.href}
+                      aria-current={isActive(pathname, item.href) ? "page" : undefined}
+                      className={linkClass(item.href)}
+                    >
+                      {item.short ?? item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+
+            <Link
+              href="/contact"
+              className="btn btn-gold shrink-0 whitespace-nowrap px-4 py-2.5 text-[0.6875rem] xl:px-5 xl:text-[0.75rem]"
+            >
+              Book your stay
             </Link>
+          </div>
+        </div>
 
+        {/* Below lg */}
+        <div className="shell flex h-[68px] items-center justify-between gap-4 lg:hidden">
+          <Logo settings={settings} orientation="inline" />
+
+          <div className="flex items-center gap-2">
+            <Link href="/contact" className="btn btn-gold hidden px-4 py-2.5 text-[0.6875rem] sm:inline-flex">
+              Book
+            </Link>
             <button
               type="button"
               onClick={() => setMenuOpen((open) => !open)}
               aria-expanded={menuOpen}
               aria-controls="mobile-nav"
-              className="-mr-2 flex h-11 w-11 items-center justify-center text-ink lg:hidden"
+              className="-mr-2 flex h-11 w-11 items-center justify-center text-ink"
             >
               <span className="sr-only">{menuOpen ? "Close menu" : "Open menu"}</span>
               <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" aria-hidden="true">
@@ -118,7 +176,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
       <div
         id="mobile-nav"
         hidden={!menuOpen}
-        className="on-umber fixed inset-0 z-40 overflow-y-auto pt-[72px] lg:hidden"
+        className="on-green fixed inset-0 z-40 overflow-y-auto pt-[68px] lg:hidden"
       >
         <nav aria-label="Mobile" className="shell py-8">
           <ul className="divide-y divide-paper/15 border-y border-paper/15">
@@ -126,9 +184,9 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className="flex items-baseline gap-4 py-4 font-display text-[1.75rem] text-paper"
+                  className="flex items-baseline gap-4 py-3.5 font-display text-[1.625rem] text-paper"
                 >
-                  <span className="text-[0.625rem] tracking-[0.2em] text-linen">
+                  <span className="text-[0.625rem] tracking-[0.2em] text-gold-light">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   {item.label}
@@ -137,8 +195,8 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
             ))}
           </ul>
 
-          <Link href="/contact" className="btn btn-outline mt-8 w-full">
-            Enquire about a stay
+          <Link href="/contact" className="btn btn-gold mt-8 w-full">
+            Book your stay
           </Link>
 
           <div className="mt-8 space-y-1 text-sm text-linen">
@@ -153,6 +211,8 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
               </a>
             ))}
           </div>
+
+          <SocialLinks socials={settings.socials} className="mt-6" />
         </nav>
       </div>
     </>

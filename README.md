@@ -25,10 +25,12 @@ Everything on the public site is stored in the database and edited at
 | Enquiries | Every website enquiry, with status and CSV export |
 | Settings | Address, phones, emails, social links, logo, hero image, SMTP |
 
-**There is no hardcoded photography anywhere.** Every image is uploaded
-through the admin panel into Supabase Storage. Until something is uploaded,
-the layout shows a quiet placeholder plate rather than a broken frame, so the
-site is presentable from day one.
+**Every image on the site is replaceable from `/admin`.** The resort's own
+photographs ship with the repository (see *Photography* below) and are
+registered in the database by the seed, so the site is complete on day one;
+uploading a new file and pointing a room, a dining item or the gallery at it
+replaces the bundled one with no code change. Where nothing is set at all,
+the layout shows a quiet placeholder plate rather than a broken frame.
 
 ---
 
@@ -100,7 +102,8 @@ against that enquiry and shown in the admin inbox.
 ## Demo mode
 
 With no Supabase environment variables set, the site runs against the fixtures
-in `src/lib/fallback-content.ts` — the same content as `seed.sql`. This makes
+in `src/lib/fallback-content.ts` — the same content, and the same
+photographs, as `seed.sql`. This makes
 the site reviewable before a database exists. The admin panel and the enquiry
 form both say plainly that they are not connected.
 
@@ -173,46 +176,85 @@ three exit non-zero on failure.
 
 ## Design
 
+The layout is modelled on **hotelgrandparagon.com**, band for band:
+
+| Reference | Here |
+| --- | --- |
+| Utility strip, centred logo, split navigation, amber "book now" | Same, with the supplied lockup centred and a gold booking chip |
+| Full-bleed hero slider, centred serif headline | `HeroSlider` — four resort photographs, arrows, dots, Ken Burns |
+| Check-in / check-out / guests bar over the hero's lower edge | `AvailabilityBar`, which hands the dates to the enquiry form |
+| Blush welcome band, photograph in a cusped arch | `WelcomeBand`; the arch is CSS (`.arch-frame`), not a bitmap |
+| Alternating image/copy bands with centred text | `FeatureBand` × 4 — rooms, at a glance, terrace, restaurant |
+| Pale centred statement between bands | `QuoteBand` |
+| Full-bleed banquet plate under a colour wash | `CelebrationsBand` |
+| Half photograph, half 2×2 icon cards | `FacilitiesPanel` |
+| Three-column amenities grid on cream | `AmenitiesGrid` |
+| "Call us 24×7" band with ornaments either side | `CallBand` |
+| Newsletter strip | `NewsletterBand` |
+| Three-column footer with "important links" and "our location" | `SiteFooter` |
+
+The reference's wide "video" plate becomes `PanoramaBand`, carrying the
+1920×700 stitch of the entrance rather than pretending there is a film.
+
 ### Palette
 
-Built on the five supplied swatches, used verbatim:
+The reference is blush pink and sage over gold. The same three-part
+structure is rebuilt here out of the company logo, so the page reads as this
+resort rather than a recolour of somebody else's:
 
 | Token | Hex | Role |
 | --- | --- | --- |
-| `ink` / `umber` | `#3E362E` | Body text, dark section ground |
-| `bark` | `#865D36` | Emphasis, prices, links, the logo mark |
-| `clay` | `#93785B` | Rules and icons only — 3.6:1, below AA for text |
-| `tan` | `#AC8968` | Section ground |
-| `greige` | `#A69080` | Supporting tone |
+| `green` | `#0E7A46` | The three peaks in the logo — icons, accents |
+| `green-deep` | `#0A5734` | Headings on tinted grounds |
+| `green-ink` | `#08402A` | Footer, utility strip, photograph scrims |
+| `wine` | `#7B1B36` | The wordmark — primary buttons, prices, links |
+| `gold` | `#B08A4A` | Ornament rules, the booking chip |
+| `blush` `#FBF1F2` · `mint` `#E7F1EA` · `cream` `#F8F1E6` | | Section grounds |
 
-Three tones are **derived**, because the supplied set has no light ground and
-nothing dark enough for small text on the mid browns: `paper` (`#F4EDE4`),
-`umber-deep` (`#2B241E`) and `stone` (`#6B5A47`).
-
-Sections alternate paper → umber → paper → almond → paper → tan → paper →
-umber, so the page has vertical rhythm rather than running cream throughout.
-Because the mid-brown grounds are light, `.on-almond` and `.on-tan` re-scope
-muted text to `umber-deep` — the default muted tone only reaches ~2.4:1 there.
+Two tones are **derived** for type, because the mid gold is only 3.7–4.2:1
+and 11px small caps need 4.5: `gold-deep` (`#7A5C29`) on the light grounds
+and `gold-light` (`#D6B678`) on the green ones. Every page is verified by
+`scripts/contrast.mjs`, which measures *rendered* colour.
 
 ### Type
 
-*Fraunces* for display (SOFT and WONK axes give it a hand), *Inter Tight* for
-body, and *Parisienne* as a signature script — used only for standalone lines
-and a single accent word inside a heading, never for running text. Tokens are
-defined once in `src/app/globals.css`.
+*Cormorant Garamond* for display — the closest free equivalent of the
+reference's high-contrast old-style serif — *Inter Tight* for body, and
+*Parisienne* as a signature script, used only on standalone lines and single
+accent words. Tokens are defined once in `src/app/globals.css`.
 
-The three-peak silhouette from the logo recurs as a structural device: section
-rules, list bullets, empty media frames and the favicon.
+The three-peak silhouette from the logo recurs as a structural device:
+ornament dividers, list bullets, empty media frames, the footer lockup and
+the favicon.
 
 ### Motion
 
-`<Reveal>` fades and lifts sections in on scroll (one IntersectionObserver per
-element, disconnected after it fires), `<Parallax>` drifts images within their
-frames, and the nearby-towns band runs two counter-scrolling rows. All of it
-is disabled under `prefers-reduced-motion`, and the hidden state is applied
-only once JavaScript has run, so content is never stuck invisible.
+`<Reveal>` fades and lifts sections in on scroll (one IntersectionObserver
+per element, disconnected after it fires), `<Parallax>` drifts images within
+their frames, the hero slide pushes slowly while it is active, and the
+nearby-towns band runs two counter-scrolling rows. All of it is disabled
+under `prefers-reduced-motion`, and the hidden state is applied only once
+JavaScript has run, so content is never stuck invisible.
 
 ---
+
+## Photography
+
+The resort's photographs ship with the repository under `public/media/`, so
+the site has real imagery on a fresh clone — before Supabase exists and
+before anyone signs in to `/admin`.
+
+`src/lib/media-library.ts` maps them to **slots** (`heroValley`, `welcome`,
+`roomLuxury`, …) rather than to file names, so changing which photograph
+fills a slot is a one-line edit instead of a change in six components.
+`supabase/seed.sql` registers the same files as `media` rows, links them to
+the rooms, dining items and gallery, and sets the welcome plate — all
+guarded, so re-running it never replaces a picture chosen in the admin
+panel.
+
+Nothing in the read path distinguishes a bundled photograph from an upload:
+both arrive as a `Media` row, so the owner can re-point any slot at their
+own file and these simply stop being referenced.
 
 ## Content accuracy
 

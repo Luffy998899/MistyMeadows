@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { MediaFrame } from "@/components/MediaFrame";
 import { PageHero } from "@/components/PageHero";
 import { getOffers } from "@/lib/content";
+import { IMAGES } from "@/lib/media-library";
 
 export const metadata: Metadata = {
   title: "Offers",
@@ -34,9 +35,10 @@ export default async function OffersPage() {
         eyebrow="Offers"
         title="Seasonal offers"
         lead="Packages and rates that run for part of the year. Book direct to use them."
+        media={IMAGES.terraceValley}
       />
 
-      <section className="section pt-0">
+      <section className="section">
         <div className="shell">
           {offers.length === 0 ? (
             <EmptyState
