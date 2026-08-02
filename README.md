@@ -85,6 +85,29 @@ npm install
 npm run dev          # http://localhost:3000
 ```
 
+#### Running it behind a port-forward
+
+In a GitHub Codespace, Gitpod, or through ngrok, the proxy rewrites the host
+while the browser keeps sending its own `Origin`. Server Actions treat that
+mismatch as a CSRF attempt, so every form in `/admin` fails with *"Invalid
+Server Actions request"*.
+
+Loopback addresses and the usual tunnel domains are already allowed in
+development, so this should just work. For any other proxy — or in production
+— list the origin:
+
+```bash
+SERVER_ACTIONS_ALLOWED_ORIGINS=admin.example.com,*.preview.example.com
+```
+
+Two things to know, because they make the obvious value wrong: it is the
+**origin the browser sends** that is matched, not the proxy's hostname; and
+the value compared includes the **port**, while `*` only wildcards a domain
+label — so `localhost:*` matches nothing and ports have to be listed.
+
+It is a security control rather than a convenience setting, so keep it to the
+origins you actually serve from.
+
 ### 5. Turn on email notifications
 
 Sign in at `/admin`, go to **Settings → Email**, and enter the SMTP details of
