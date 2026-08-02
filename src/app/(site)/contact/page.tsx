@@ -5,6 +5,7 @@ import { EnquiryForm } from "@/components/EnquiryForm";
 import { PageHero } from "@/components/PageHero";
 import { SocialLinks } from "@/components/SocialLinks";
 import { getRooms, getSettings } from "@/lib/content";
+import { IMAGES } from "@/lib/media-library";
 
 export const metadata: Metadata = {
   title: "Contact & Enquiries",
@@ -21,12 +22,13 @@ export default async function ContactPage() {
         eyebrow="Reservations"
         title="Enquire about a stay"
         lead="Send us your dates and we will come back with availability and the best rate we can do — usually the same day."
+        media={IMAGES.heroFront}
       />
 
-      <section className="section pt-0">
+      <section className="section">
         <div className="shell grid gap-12 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-20">
           {/* useSearchParams needs a Suspense boundary during prerender. */}
-          <Suspense fallback={<div className="border-t-2 border-umber pt-8" />}>
+          <Suspense fallback={<div className="border-t-2 border-green-ink pt-8" />}>
             <EnquiryForm rooms={rooms} />
           </Suspense>
 
@@ -89,7 +91,7 @@ export default async function ContactPage() {
                   href={settings.map_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="link-underline mt-4 inline-block text-sm text-bark"
+                  className="link-underline mt-4 inline-block text-sm text-wine"
                 >
                   Open in Google Maps
                 </a>
@@ -97,7 +99,7 @@ export default async function ContactPage() {
             </div>
 
             {Object.values(settings.socials).some(Boolean) ? (
-              <div className="on-umber mt-8 p-6">
+              <div className="on-green mt-8 p-6">
                 <h2 className="eyebrow">Follow the resort</h2>
                 <SocialLinks socials={settings.socials} className="mt-4" />
               </div>

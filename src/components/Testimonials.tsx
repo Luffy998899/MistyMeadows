@@ -4,7 +4,7 @@ import type { Testimonial } from "@/lib/types";
 
 function Stars({ rating }: { rating: number }) {
   return (
-    <p className="flex items-center gap-1 text-bark" aria-label={`${rating} out of 5`}>
+    <p className="flex items-center justify-center gap-1 text-gold" aria-label={`${rating} out of 5`}>
       {Array.from({ length: 5 }, (_, i) => (
         <svg
           key={i}
@@ -26,36 +26,38 @@ export function Testimonials({ testimonials }: { testimonials: Testimonial[] }) 
   if (testimonials.length === 0) return null;
 
   return (
-    <section className="section on-tan" aria-labelledby="guests-title">
+    <section className="section on-mint" aria-labelledby="guests-title">
       <div className="shell">
-        <SectionHeading
-          eyebrow="In their words"
-          title={
-            <span id="guests-title">
-              What guests said <span className="signature">afterwards</span>
-            </span>
-          }
-        />
+        <Reveal>
+          <SectionHeading
+            eyebrow="In their words"
+            title={
+              <span id="guests-title">
+                What guests said <span className="signature">afterwards</span>
+              </span>
+            }
+          />
+        </Reveal>
 
-        <div className="mt-12 grid gap-x-10 gap-y-12 md:mt-16 md:grid-cols-2 lg:grid-cols-3">
-          {testimonials.map((item, i) => (
+        <div className="mt-12 grid gap-6 md:mt-16 md:grid-cols-2 lg:grid-cols-3">
+          {testimonials.slice(0, 3).map((item, i) => (
             <Reveal
               as="figure"
               key={item.id}
               delay={i * 110}
-              className="flex flex-col border-t border-paper-edge pt-6"
+              className="card flex flex-col p-7 text-center"
             >
               <Stars rating={item.rating} />
 
               {item.headline ? (
-                <h3 className="text-h3 mt-4 font-display">{item.headline}</h3>
+                <h3 className="mt-4 font-display text-[1.25rem] leading-snug">{item.headline}</h3>
               ) : null}
 
               <blockquote className="mt-3 flex-1 text-[0.9375rem] leading-relaxed text-stone">
                 {item.quote}
               </blockquote>
 
-              <figcaption className="mt-5 text-sm font-medium">
+              <figcaption className="mt-6 border-t border-paper-edge pt-5 text-sm font-medium">
                 {item.author}
                 {item.stay_date ? (
                   <span className="ml-2 font-normal text-stone">{item.stay_date}</span>

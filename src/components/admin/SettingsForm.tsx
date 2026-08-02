@@ -199,7 +199,7 @@ export function SettingsForm({
       </fieldset>
 
       {state?.error ? (
-        <p role="alert" className="border-l-2 border-bark bg-paper p-4 text-sm text-bark">
+        <p role="alert" className="border-l-2 border-wine bg-paper p-4 text-sm text-wine">
           {state.error}
         </p>
       ) : null}
@@ -209,7 +209,7 @@ export function SettingsForm({
           {pending ? "Saving…" : "Save settings"}
         </button>
         {state?.message ? (
-          <span role="status" className="text-sm text-bark">
+          <span role="status" className="text-sm text-wine">
             {state.message}
           </span>
         ) : null}

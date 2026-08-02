@@ -30,9 +30,12 @@ const LABELS: Record<string, string> = {
  */
 export function SocialLinks({
   socials,
+  size = "md",
   className = "",
 }: {
   socials: Socials;
+  /** `sm` is the bare-icon row used in the header's utility strip. */
+  size?: "sm" | "md";
   className?: string;
 }) {
   const entries = Object.entries(socials).filter(
@@ -41,18 +44,28 @@ export function SocialLinks({
 
   if (entries.length === 0) return null;
 
+  const small = size === "sm";
+
   return (
-    <ul className={`flex items-center gap-2 ${className}`}>
+    <ul className={`flex items-center ${small ? "gap-1" : "gap-2"} ${className}`}>
       {entries.map(([key, url]) => (
         <li key={key}>
           <a
             href={url as string}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex h-11 w-11 items-center justify-center border border-paper/25 text-paper/80 transition-colors hover:border-paper hover:text-paper"
+            className={
+              small
+                ? "flex h-8 w-8 items-center justify-center text-paper/75 transition-colors hover:text-gold-light"
+                : "flex h-11 w-11 items-center justify-center border border-paper/25 text-paper/80 transition-colors hover:border-gold hover:text-gold-light"
+            }
           >
             <span className="sr-only">{LABELS[key] ?? key}</span>
-            <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              className={small ? "h-4 w-4" : "h-[18px] w-[18px]"}
+              aria-hidden="true"
+            >
               <path d={PATHS[key]} fill="currentColor" />
             </svg>
           </a>

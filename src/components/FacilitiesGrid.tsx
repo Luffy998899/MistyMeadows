@@ -18,7 +18,7 @@ export function FacilitiesGrid({ facilities }: { facilities: Facility[] }) {
           delay={i * 90}
           className="border-b border-paper-edge px-0 py-7 sm:px-7 sm:[&:nth-child(odd)]:pl-0 lg:border-l lg:px-7 lg:first:border-l-0 lg:first:pl-0 lg:[&:nth-child(odd)]:pl-7 lg:[&:nth-child(odd)]:first:pl-0"
         >
-          <Icon name={facility.icon} className="h-7 w-7 text-clay" />
+          <Icon name={facility.icon} className="h-7 w-7 text-gold" />
           <h3 className="text-h3 mt-5 font-display">{facility.name}</h3>
           <p className="mt-2.5 text-sm leading-relaxed text-stone">{facility.description}</p>
         </Reveal>

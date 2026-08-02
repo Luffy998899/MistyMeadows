@@ -98,6 +98,14 @@ const audit = () => {
 
     const rect = el.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) continue;
+    /*
+      Visually-hidden text. `.sr-only` clips a 1x1 box and `clip-path` does
+      not change the border box, so these otherwise get measured against
+      whatever ground they happen to sit over — and always fail, because no
+      one chose a colour for text nobody can see.
+    */
+    if (rect.width <= 2 || rect.height <= 2) continue;
+    if (getComputedStyle(el).clipPath !== "none") continue;
 
     const fg = parse(style.color);
     if (!fg) continue;

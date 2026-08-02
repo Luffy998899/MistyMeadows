@@ -1,45 +1,56 @@
 import { PeakGlyph } from "./PeakMark";
 
 /**
- * Section opener: an eyebrow, the title, and the peak-interrupted rule that
- * runs through the whole site. Left-aligned by default — the page uses real
- * composition rather than a stack of centred blocks.
+ * Section opener: a small-caps eyebrow, a gold ornament broken by the logo's
+ * peak silhouette, the heading, and an optional lead.
+ *
+ * Centred by default — the reference opens nearly every band this way, and
+ * the alternating image/text rows on the home page each centre their copy
+ * within their own half. `start` and `end` exist for the places where the
+ * text column is genuinely edge-aligned.
  */
 export function SectionHeading({
   eyebrow,
   title,
   lead,
-  align = "start",
+  align = "center",
   as: Tag = "h2",
   className = "",
 }: {
   eyebrow?: string;
   title: React.ReactNode;
   lead?: React.ReactNode;
-  align?: "start" | "center";
+  align?: "start" | "center" | "end";
   as?: "h1" | "h2" | "h3";
   className?: string;
 }) {
+  const box =
+    align === "center"
+      ? "mx-auto max-w-2xl items-center text-center"
+      : align === "end"
+        ? "ml-auto max-w-2xl items-end text-right"
+        : "max-w-2xl items-start";
+
   return (
-    <div
-      className={`${align === "center" ? "mx-auto max-w-2xl text-center" : "max-w-2xl"} ${className}`}
-    >
-      {eyebrow ? (
-        <div
-          className={`peak-rule mb-5 ${align === "center" ? "justify-center [&::after]:hidden" : ""}`}
-        >
-          <PeakGlyph className="h-3 w-auto shrink-0" />
-          <span className="eyebrow whitespace-nowrap">{eyebrow}</span>
-        </div>
-      ) : null}
+    <div className={`flex flex-col ${box} ${className}`}>
+      {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
+
+      <div
+        className={`ornament my-4 ${
+          align === "center"
+            ? ""
+            : align === "end"
+              ? "ornament-end w-full max-w-[13rem]"
+              : "ornament-start w-full max-w-[13rem]"
+        }`}
+        aria-hidden="true"
+      >
+        <PeakGlyph className="h-2.5 w-auto shrink-0" />
+      </div>
 
       <Tag className={Tag === "h1" ? "text-h1" : "text-h2"}>{title}</Tag>
 
-      {lead ? (
-        <p className={`text-lead mt-5 text-stone ${align === "center" ? "" : "max-w-xl"}`}>
-          {lead}
-        </p>
-      ) : null}
+      {lead ? <p className="text-lead mt-5 text-stone">{lead}</p> : null}
     </div>
   );
 }

@@ -108,11 +108,11 @@ from (values
   ('facility', 'Conference Room',          'Meeting and conference space for corporate offsites.',       'conference', 2),
   ('facility', 'Clubhouse',                'Indoor games including table tennis, plus a gym.',           'clubhouse',  3),
   ('facility', 'Parking Space',            'On-site parking for residents and day guests.',              'parking',    4),
-  ('booking_benefit', 'No booking fee',       'Book direct and pay no reservation charge.',              'peak', 1),
-  ('booking_benefit', 'Best rate guarantee', 'The lowest available rate, direct from the resort.',       'peak', 2),
-  ('booking_benefit', 'Reservations 24/7',   'Reach the front desk at any hour.',                        'peak', 3),
-  ('booking_benefit', 'High-speed Wi-Fi',    'Complimentary across the property.',                       'peak', 4),
-  ('booking_benefit', 'Flexible amendments', 'Support in case of cancellation or amendment.',            'peak', 5)
+  ('booking_benefit', 'No booking fee',       'Book direct and pay no reservation charge.',              'tag', 1),
+  ('booking_benefit', 'Best rate guarantee', 'The lowest available rate, direct from the resort.',       'rate', 2),
+  ('booking_benefit', 'Reservations 24/7',   'Reach the front desk at any hour.',                        'clock', 3),
+  ('booking_benefit', 'High-speed Wi-Fi',    'Complimentary across the property.',                       'wifi', 4),
+  ('booking_benefit', 'Flexible amendments', 'Support in case of cancellation or amendment.',            'calendar', 5)
 ) as v(category, name, description, icon, sort)
 where not exists (
   select 1 from public.facilities f
@@ -155,4 +155,110 @@ from (values
 ) as v(author, headline, quote, sort)
 where not exists (
   select 1 from public.testimonials t where t.author = v.author
+);
+
+-- ---------------------------------------------------------------------
+-- Photography
+--
+-- The resort's own photographs ship with the application under
+-- `public/media/`, so the site has real imagery the moment it is
+-- deployed — before anyone signs in to /admin.
+--
+-- Each one is registered as a `media` row whose `public_url` is the
+-- application path rather than a Supabase Storage URL. Nothing in the
+-- read path cares which it is: the admin panel can re-point any slot at
+-- an uploaded file, and these rows simply stop being referenced.
+--
+-- `storage_path` is unique, so `on conflict do nothing` is genuinely
+-- idempotent here (unlike the surrogate-key tables above).
+-- ---------------------------------------------------------------------
+
+insert into public.media (storage_path, public_url, kind, alt, title, width, height) values
+  ('/media/slider-valley-bloom.jpg',    '/media/slider-valley-bloom.jpg',    'image', 'Bougainvillea in flower above a pine valley at Misty Meadows', 'Valley in bloom',        1920, 1080),
+  ('/media/slider-resort-front.jpg',    '/media/slider-resort-front.jpg',    'image', 'The entrance forecourt at Misty Meadows Resorts in full sun',  'The resort, from the gate', 1920, 1080),
+  ('/media/slider-pine-slopes.jpg',     '/media/slider-pine-slopes.jpg',     'image', 'Chir pine covering the slopes below the resort',               'Pine slopes',            1920, 1080),
+  ('/media/slider-resort-hillside.jpg', '/media/slider-resort-hillside.jpg', 'image', 'Misty Meadows seen from across the valley, set into the hillside', 'Across the valley',  1920, 1080),
+  ('/media/welcome-misty-terrace.jpg',  '/media/welcome-misty-terrace.jpg',  'image', 'Cloud rolling through the pines above the resort''s stone terrace', 'Misty terrace',      640,  500),
+  ('/media/panorama-entrance.jpg',      '/media/panorama-entrance.jpg',      'image', 'Panorama across the resort entrance, gardens and stone carving', 'Entrance panorama',   1920, 700),
+  ('/media/celebrations-terrace.jpg',   '/media/celebrations-terrace.jpg',   'image', 'The open terrace laid for dinner at dusk, lights along the steps', 'Terrace at dusk',    730,  705),
+  ('/media/terrace-valley-view.jpg',    '/media/terrace-valley-view.jpg',    'image', 'A table for two on a private terrace looking down the valley', 'Terrace table',          2000, 1333),
+  ('/media/restaurant-hall.jpg',        '/media/restaurant-hall.jpg',        'image', 'The multi-cuisine restaurant, laid up and lit by the valley windows', 'The restaurant',  2000, 1333),
+  ('/media/restaurant-table.jpg',       '/media/restaurant-table.jpg',       'image', 'A restaurant table set with red napkins and a small succulent', 'Laid for lunch',        2000, 1333),
+  ('/media/room-luxury.jpg',            '/media/room-luxury.jpg',            'image', 'Luxury room with a seating corner and the valley through the glazing', 'Luxury Room',    730,  705),
+  ('/media/room-terrace.jpg',           '/media/room-terrace.jpg',           'image', 'Room opening onto a private terrace with chairs and a table',  'Luxury Room with Terrace', 730, 705),
+  ('/media/room-superior.jpg',          '/media/room-superior.jpg',          'image', 'Superior room with a wide window onto the wooded hillside',    'Superior Room',          730,  705),
+  ('/media/room-balcony.jpg',           '/media/room-balcony.jpg',           'image', 'Room with full-height glazing onto a balcony above the valley', 'Room with balcony',     730,  705),
+  ('/media/suite-premium-lounge.jpg',   '/media/suite-premium-lounge.jpg',   'image', 'Premium suite with a separate sofa lounge beside the bed',     'Premium Suite',          2000, 1333),
+  ('/media/suite-premium-bed.jpg',      '/media/suite-premium-bed.jpg',      'image', 'Premium suite bedroom with seating and a writing desk',        'Premium Suite, bedroom', 2000, 1333),
+  ('/media/room-deluxe-desk.jpg',       '/media/room-deluxe-desk.jpg',       'image', 'Deluxe room with a writing desk, television and mirror',       'Deluxe Room',            2000, 1333),
+  ('/media/room-evening.jpg',           '/media/room-evening.jpg',           'image', 'A room in the evening, wall lights on and the curtains drawn',  'A room at dusk',        2000, 1333),
+  ('/media/room-balcony-outlook.jpg',   '/media/room-balcony-outlook.jpg',   'image', 'Looking from the bed through sliding doors onto a balcony',    'Balcony outlook',        2000, 1333)
+on conflict (storage_path) do nothing;
+
+-- Attach a photograph to each room, but only where one has not been set,
+-- so a re-run never replaces a picture chosen in the admin panel.
+update public.rooms r
+set image_id = m.id
+from public.media m
+where r.image_id is null
+  and m.storage_path = case r.slug
+    when 'luxury-room'           then '/media/room-luxury.jpg'
+    when 'deluxe-room'           then '/media/room-deluxe-desk.jpg'
+    when 'superior-room-balcony' then '/media/room-superior.jpg'
+    when 'luxury-room-terrace'   then '/media/room-terrace.jpg'
+    when 'premium-suite'         then '/media/suite-premium-lounge.jpg'
+  end;
+
+update public.dining_items d
+set image_id = m.id
+from public.media m
+where d.image_id is null
+  and m.storage_path = case d.name
+    when 'Veg Thali'                   then '/media/restaurant-hall.jpg'
+    when 'Non-Veg Thali'               then '/media/restaurant-table.jpg'
+    when 'Day Picnic — Vegetarian'     then '/media/terrace-valley-view.jpg'
+    when 'Day Picnic — Non-Vegetarian' then '/media/celebrations-terrace.jpg'
+  end;
+
+-- The welcome band's arched plate.
+update public.site_settings s
+set hero_media_id = m.id
+from public.media m
+where s.hero_media_id is null
+  and m.storage_path = '/media/welcome-misty-terrace.jpg';
+
+-- ---------------------------------------------------------------------
+-- Gallery
+--
+-- `hero` is a category in its own right: those four are what the home
+-- page slider shows, so the owner can change what opens the site from
+-- the Gallery screen without a developer.
+-- ---------------------------------------------------------------------
+
+insert into public.gallery_items (media_id, caption, category, sort_order)
+select m.id, v.caption, v.category, v.sort
+from (values
+  ('/media/slider-valley-bloom.jpg',    'Bougainvillea over the valley',   'hero',    1),
+  ('/media/slider-resort-front.jpg',    'The resort forecourt',            'hero',    2),
+  ('/media/slider-pine-slopes.jpg',     'Pine slopes below the property',  'hero',    3),
+  ('/media/slider-resort-hillside.jpg', 'Misty Meadows from across the valley', 'hero', 4),
+  ('/media/welcome-misty-terrace.jpg',  'Cloud through the pines',         'resort',  5),
+  ('/media/panorama-entrance.jpg',      'The entrance and gardens',        'resort',  6),
+  ('/media/room-luxury.jpg',            'Luxury room',                     'rooms',   7),
+  ('/media/room-terrace.jpg',           'Luxury room with terrace',        'rooms',   8),
+  ('/media/room-superior.jpg',          'Superior room',                   'rooms',   9),
+  ('/media/room-balcony.jpg',           'Room with balcony',               'rooms',  10),
+  ('/media/suite-premium-lounge.jpg',   'Premium suite, sitting room',     'rooms',  11),
+  ('/media/suite-premium-bed.jpg',      'Premium suite',                   'rooms',  12),
+  ('/media/room-deluxe-desk.jpg',       'Deluxe room',                     'rooms',  13),
+  ('/media/room-evening.jpg',           'A room in the evening',           'rooms',  14),
+  ('/media/room-balcony-outlook.jpg',   'Balcony outlook',                 'rooms',  15),
+  ('/media/restaurant-hall.jpg',        'The restaurant',                  'dining', 16),
+  ('/media/restaurant-table.jpg',       'Laid for lunch',                  'dining', 17),
+  ('/media/terrace-valley-view.jpg',    'A table on the terrace',          'dining', 18),
+  ('/media/celebrations-terrace.jpg',   'The terrace at dusk',             'events', 19)
+) as v(path, caption, category, sort)
+join public.media m on m.storage_path = v.path
+where not exists (
+  select 1 from public.gallery_items g where g.media_id = m.id
 );

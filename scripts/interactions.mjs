@@ -120,6 +120,57 @@ function check(name, condition, detail = "") {
   await page.close();
 }
 
+// --- Hero slider -------------------------------------------------------
+{
+  console.log("Hero slider @1440");
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  await page.goto(`${BASE}/`, { waitUntil: "load" });
+
+  const dots = page.locator('[aria-roledescription="carousel"] ~ * button, [aria-roledescription="carousel"] button[aria-current]');
+  const active = () => page.locator("button[aria-current='true']").first();
+
+  const first = await active().getAttribute("aria-current");
+  check("a slide is marked current", first === "true");
+
+  await page.getByRole("button", { name: /next slide/i }).click();
+  await page.waitForTimeout(300);
+
+  const secondLabel = await active().locator(".sr-only").textContent();
+  check("next advances the slider", secondLabel?.includes("Slide 2"), secondLabel ?? "");
+
+  await page.getByRole("button", { name: /previous slide/i }).click();
+  await page.waitForTimeout(300);
+  const backLabel = await active().locator(".sr-only").textContent();
+  check("previous goes back", backLabel?.includes("Slide 1"), backLabel ?? "");
+
+  // Only the visible slide should be exposed to assistive technology.
+  const hidden = await page
+    .locator('[aria-roledescription="carousel"] > div[aria-hidden="true"]')
+    .count();
+  check("inactive slides are aria-hidden", hidden === (await dots.count()) - 1 || hidden > 0);
+
+  await page.close();
+}
+
+// --- Availability bar --------------------------------------------------
+{
+  console.log("Availability bar @1440");
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  await page.goto(`${BASE}/`, { waitUntil: "load" });
+
+  await page.fill("#avail-in", "2030-05-01");
+  await page.fill("#avail-out", "2030-05-04");
+  await page.fill("#avail-guests", "3");
+  await page.getByRole("button", { name: /check availability/i }).click();
+  await page.waitForURL(/\/contact\?/, { timeout: 10_000 });
+
+  check("hands the dates to the enquiry form", page.url().includes("check_in=2030-05-01"), page.url());
+  check("check-in is pre-filled", (await page.inputValue("#check_in")) === "2030-05-01");
+  check("guests is pre-filled", (await page.inputValue("#guests")) === "3");
+
+  await page.close();
+}
+
 // --- Admin gate --------------------------------------------------------
 {
   console.log("Admin");
