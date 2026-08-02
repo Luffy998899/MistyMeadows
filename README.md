@@ -19,6 +19,7 @@ Everything on the public site is stored in the database and edited at
 | Facilities & benefits | On-site facilities, and the "booking direct" points |
 | Dining | Thalis, picnic packages, prices |
 | Testimonials | Guest reviews and star ratings |
+| Attractions | Places to visit nearby, with distances and photographs |
 | Gallery | Photographs, grouped by category |
 | Offers | Seasonal packages with validity dates |
 | News & events | Posts, with optional future publish dates |
@@ -43,6 +44,7 @@ At [supabase.com](https://supabase.com), create a project, then open
 
 1. `supabase/migrations/0001_init.sql` — tables, row level security,
    storage bucket
+1. `supabase/migrations/0002_attractions.sql` — the attractions table
 2. `supabase/seed.sql` — the real resort content transcribed from the
    existing website (rooms, apartments, dining rates, testimonials, address)
 
@@ -255,6 +257,33 @@ panel.
 Nothing in the read path distinguishes a bundled photograph from an upload:
 both arrive as a `Media` row, so the owner can re-point any slot at their
 own file and these simply stop being referenced.
+
+### Photographs of the attractions
+
+The eleven places on `/attractions` are public landmarks, not the resort's
+property, so **no photograph of them ships with the repository**. Each row
+resolves its picture in this order:
+
+1. an image attached to the row in **/admin** — always wins;
+2. a file named `<slug>.jpg` in `public/media/attractions/`;
+3. otherwise a labelled placeholder plate carrying the distance, so the row
+   is still useful and does not look broken.
+
+To fill option 2 in one command:
+
+```bash
+node scripts/fetch-attraction-photos.mjs
+npm run build          # a statically rendered page reads the directory at build time
+```
+
+It pulls one freely licensed photograph per attraction from Wikimedia and
+writes `public/media/attractions/credits.json` alongside them. **Keep that
+file** — CC-BY and CC-BY-SA require crediting the photographer, and the page
+renders the credit underneath each photograph from it. The script refuses to
+write any file whose licence it could not confirm.
+
+Replacing any of them with the resort's own photograph is just an upload in
+the admin panel, which takes precedence and needs no credit line.
 
 ## Content accuracy
 

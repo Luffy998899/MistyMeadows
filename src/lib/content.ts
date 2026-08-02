@@ -2,6 +2,7 @@ import { cache } from "react";
 
 import {
   DEMO_APARTMENTS,
+  DEMO_ATTRACTIONS,
   DEMO_DINING,
   DEMO_FACILITIES,
   DEMO_GALLERY,
@@ -13,6 +14,7 @@ import { isSupabaseConfigured } from "./supabase/env";
 import { createClient } from "./supabase/server";
 import type {
   Apartment,
+  Attraction,
   DiningItem,
   Facility,
   GalleryItem,
@@ -102,6 +104,11 @@ export const getRooms = cache(
 export const getApartments = cache(
   (): Promise<Apartment[]> =>
     listPublished("apartments", "*, image:image_id(*)", DEMO_APARTMENTS),
+);
+
+export const getAttractions = cache(
+  (): Promise<Attraction[]> =>
+    listPublished("attractions", "*, image:image_id(*)", DEMO_ATTRACTIONS),
 );
 
 export const getFacilities = cache(

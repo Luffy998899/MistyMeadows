@@ -108,13 +108,21 @@ export function HeroSlider({
         ))}
 
         {/*
-          Scrim. The headline is white over photographs that run from bright
-          sky to dark pine, so the gradient is heavier at top and bottom —
-          where the type and the availability bar actually sit — than in the
-          middle, which keeps the picture readable.
+          Scrim, in two parts.
+
+          A vertical gradient alone was not enough: these photographs run
+          from blown-out sky to sunlit foliage, and white type over the
+          bright middle of the bougainvillea slide was genuinely hard to
+          read. So a centred radial wash sits under the type as well, which
+          darkens the area the headline occupies without flattening the
+          corners of the picture.
         */}
         <div
-          className="absolute inset-0 bg-[linear-gradient(to_bottom,rgb(8_64_42/0.55),rgb(8_64_42/0.28)_38%,rgb(8_64_42/0.72))]"
+          className="absolute inset-0 bg-[linear-gradient(to_bottom,rgb(8_64_42/0.62),rgb(8_64_42/0.42)_45%,rgb(8_64_42/0.78))]"
+          aria-hidden="true"
+        />
+        <div
+          className="absolute inset-0 bg-[radial-gradient(ellipse_58%_52%_at_50%_45%,rgb(6_38_25/0.62),transparent_72%)]"
           aria-hidden="true"
         />
 
@@ -126,11 +134,19 @@ export function HeroSlider({
               <PeakGlyph className="h-3 w-auto shrink-0" />
             </div>
 
-            <h1 className="text-display max-w-4xl font-display leading-[1.02] text-paper drop-shadow-[0_2px_18px_rgb(8_64_42/0.55)]">
+            {/*
+              One face, one weight, one colour. The gold script accent that
+              was here before lost too much contrast against the sunlit parts
+              of the photographs — at display size the swash strokes are
+              thin, and thin gold on bright foliage is unreadable whatever
+              the scrim does. The emphasis now comes from an italic of the
+              same serif, still in paper white.
+            */}
+            <h1 className="text-display max-w-4xl font-display font-medium leading-[1.06] text-paper [text-shadow:0_2px_6px_rgb(6_38_25/0.55),0_8px_32px_rgb(6_38_25/0.45)]">
               {headline}
             </h1>
 
-            <p className="mt-6 max-w-xl text-[0.9375rem] leading-relaxed text-paper/85 md:text-base">
+            <p className="mt-6 max-w-xl text-[0.9375rem] leading-relaxed text-paper [text-shadow:0_1px_10px_rgb(6_38_25/0.7)] md:text-base">
               {sub}
             </p>
 

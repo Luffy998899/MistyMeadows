@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { FOOTER_SERVICES, PRIMARY_NAV } from "@/lib/nav";
+import { FOOTER_SERVICES, PRIMARY_NAV, SECONDARY_NAV } from "@/lib/nav";
 import type { SiteSettings } from "@/lib/types";
 
 import { Logo } from "./Logo";
@@ -32,10 +32,10 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
               {settings.tagline}. Pine on three sides, the valley on the fourth.
             </p>
 
-            {Object.values(settings.socials).some(Boolean) ? (
+            {Object.values(settings.socials).some(Boolean) || settings.whatsapp ? (
               <>
                 <h2 className="eyebrow mt-8">Follow us on</h2>
-                <SocialLinks socials={settings.socials} className="mt-3" />
+                <SocialLinks socials={settings.socials} whatsapp={settings.whatsapp} className="mt-3" />
               </>
             ) : null}
           </div>
@@ -47,7 +47,7 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
                 Important links
               </h2>
               <ul className="space-y-2">
-                {PRIMARY_NAV.slice(1).map((item) => (
+                {[...PRIMARY_NAV.slice(1), ...SECONDARY_NAV].map((item) => (
                   <li key={item.href}>
                     <Link
                       href={item.href}

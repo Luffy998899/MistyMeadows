@@ -43,6 +43,25 @@ export type Apartment = {
   image?: Media | null;
 };
 
+export type Attraction = {
+  id: string;
+  slug: string;
+  name: string;
+  category: string;
+  /** Free text — "About 5 km · 15 min" — because road distance and drive
+   *  time vary by route and season, and the owner is the one who knows. */
+  distance_note: string;
+  summary: string;
+  description: string;
+  visit_note: string | null;
+  highlights: string[];
+  map_url: string | null;
+  image_id: string | null;
+  sort_order: number;
+  published: boolean;
+  image?: Media | null;
+};
+
 export type FacilityCategory = "facility" | "booking_benefit";
 
 export type Facility = {
