@@ -21,7 +21,7 @@ Everything on the public site is stored in the database and edited at
 | Testimonials | Guest reviews and star ratings |
 | Attractions | Places to visit nearby, with distances and photographs |
 | Videos | Films of the resort — an upload or a YouTube/Vimeo link |
-| Gallery | Photographs, grouped by category |
+| Gallery | Photographs, grouped by category — with bulk upload |
 | Offers | Seasonal packages, validity dates, and which one announces itself |
 | News & events | Posts, with optional future publish dates |
 | Enquiries | Every website enquiry, with status and CSV export |
@@ -142,6 +142,24 @@ against that enquiry and shown in the admin inbox.
 
 ---
 
+## Uploading photographs in bulk
+
+The Gallery screen in the admin panel takes a whole folder at once: drop the
+files on it (or pick them all), give the batch a category, and each one is
+uploaded, added to the media library and published to the gallery in a single
+pass. `sort_order` continues from what is already there, so a second batch
+lands after the first rather than interleaving.
+
+Three upload at a time rather than all at once — a folder of phone photographs
+is easily 200 MB, and thirty parallel uploads on a hill-station connection
+stall each other. Each file is independent, so one failure is reported against
+that file and the rest carry on.
+
+The single-file picker is still there on every other screen for choosing a
+room's photograph, a facility's, and so on.
+
+---
+
 ## Offers announce themselves
 
 There is no "Offers" item in the menu. Instead, tick **Announce this offer
@@ -222,7 +240,8 @@ With a server running on port 3210:
 ```bash
 node scripts/screenshot.mjs /rooms rooms 1440,768,375   # layout at each width
 node scripts/contrast.mjs / /rooms /contact             # WCAG AA contrast
-node scripts/interactions.mjs                           # nav, keyboard, forms
+node scripts/interactions.mjs                           # nav, keyboard, forms,
+                                                        # slider, gallery lightbox
 node scripts/check-video-links.mjs                      # YouTube/Vimeo parsing
 ```
 

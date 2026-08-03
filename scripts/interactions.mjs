@@ -171,6 +171,53 @@ function check(name, condition, detail = "") {
   await page.close();
 }
 
+// --- Gallery lightbox --------------------------------------------------
+{
+  console.log("Gallery lightbox @1440");
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  // The offer panel is a modal too; dismiss it up front so it cannot steal
+  // focus or scroll-lock partway through these assertions.
+  await page.addInitScript(() =>
+    localStorage.setItem("mm:offer-dismissed", "midweek-in-the-hills:1"),
+  );
+  await page.goto(`${BASE}/gallery`, { waitUntil: "load" });
+
+  const tiles = page.locator("main ul li button");
+  const count = await tiles.count();
+  check("tiles render", count > 0, `${count} tiles`);
+
+  const dialog = page.locator('[role="dialog"]');
+  check("nothing open initially", (await dialog.count()) === 0);
+
+  await tiles.nth(1).click();
+  await dialog.waitFor({ state: "visible", timeout: 5000 });
+  check("clicking a tile opens it", await dialog.isVisible());
+
+  const counter = async () => (await dialog.locator("p").first().textContent())?.trim();
+  const opened = await counter();
+  check("shows its position", /^2 \/ \d+$/.test(opened ?? ""), opened ?? "");
+
+  await page.keyboard.press("ArrowRight");
+  check("arrow key advances", (await counter())?.startsWith("3 /"), await counter());
+
+  await page.keyboard.press("ArrowLeft");
+  check("arrow key goes back", (await counter())?.startsWith("2 /"), await counter());
+
+  await page.keyboard.press("Escape");
+  await dialog.waitFor({ state: "detached", timeout: 5000 });
+  check("Escape closes it", (await dialog.count()) === 0);
+
+  // Filtering must not leave the lightbox pointing at a stale index.
+  const chips = page.locator('button[aria-pressed]');
+  if ((await chips.count()) > 1) {
+    await chips.nth(1).click();
+    const filtered = await tiles.count();
+    check("filter narrows the grid", filtered > 0 && filtered < count, `${filtered} of ${count}`);
+  }
+
+  await page.close();
+}
+
 // --- Admin gate --------------------------------------------------------
 {
   console.log("Admin");
