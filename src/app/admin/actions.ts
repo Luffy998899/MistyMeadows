@@ -88,6 +88,18 @@ export async function saveResource(
     }
   }
 
+  /*
+    A video row needs either an uploaded file or an embed link. The database
+    enforces it too (`videos_have_a_source`), but a check constraint surfaces
+    as "new row violates check constraint" — which tells the owner nothing.
+  */
+  if (resource.table === "videos" && !row.media_id && !row.embed_url) {
+    return {
+      ok: false,
+      error: "Upload a video file or paste a YouTube / Vimeo link — one of the two is needed.",
+    };
+  }
+
   const supabase = await createClient();
 
   const { error } =
@@ -99,6 +111,14 @@ export async function saveResource(
     // Unique violation on slug is the one users hit in practice.
     if (error.code === "23505") {
       return { ok: false, error: "That web address is already used by another entry." };
+    }
+    // A column the database does not have yet — almost always a migration
+    // that has not been run. Say so, rather than showing raw PostgREST.
+    if (error.code === "PGRST204" || error.code === "42703") {
+      return {
+        ok: false,
+        error: `${error.message} — this usually means a migration in supabase/migrations/ has not been run yet.`,
+      };
     }
     return { ok: false, error: error.message };
   }

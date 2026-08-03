@@ -50,7 +50,8 @@ counts() {
           ||'/'||(select count(*) from facilities)||'/'||(select count(*) from dining_items)
           ||'/'||(select count(*) from testimonials)
           ||'/'||(select count(*) from media)||'/'||(select count(*) from gallery_items)
-          ||'/'||(select count(*) from attractions);"
+          ||'/'||(select count(*) from attractions)
+          ||'/'||(select count(*) from offers)||'/'||(select count(*) from videos);"
 }
 
 echo "→ applying stub, migration and seed"
@@ -58,7 +59,7 @@ psql_quiet "$DB" "$ROOT/supabase/verify/00-supabase-stub.sql"
 for m in "$ROOT"/supabase/migrations/*.sql; do psql_quiet "$DB" "$m"; done
 psql_quiet "$DB" "$ROOT/supabase/seed.sql"
 FIRST=$(counts)
-echo "   rooms/apartments/facilities/dining/testimonials/media/gallery/attractions = $FIRST"
+echo "   rooms/apts/facilities/dining/testimonials/media/gallery/attractions/offers/videos = $FIRST"
 
 echo "→ re-applying to check idempotency"
 for m in "$ROOT"/supabase/migrations/*.sql; do psql_quiet "$DB" "$m"; done
@@ -78,6 +79,22 @@ if [ "$UNLINKED" != "0" ]; then
   exit 1
 fi
 echo "   PASS: every room has a photograph"
+
+UNILLUSTRATED=$(psql -h "$SOCK" -p "$PORT" -U postgres -d "$DB" -At -c \
+  "select count(*) from facilities where category = 'facility' and image_id is null;")
+if [ "$UNILLUSTRATED" != "0" ]; then
+  echo "   FAIL: $UNILLUSTRATED on-site facility/ies have no photograph attached"
+  exit 1
+fi
+echo "   PASS: every on-site facility has a photograph"
+
+ANNOUNCED=$(psql -h "$SOCK" -p "$PORT" -U postgres -d "$DB" -At -c \
+  "select count(*) from offers where announce and published;")
+if [ "$ANNOUNCED" != "1" ]; then
+  echo "   FAIL: expected exactly one announced offer, got $ANNOUNCED"
+  exit 1
+fi
+echo "   PASS: exactly one offer is set to announce"
 
 echo "→ checking the seed does not overwrite admin-panel edits"
 psql_db "$DB" -q -c "update rooms set summary = 'OWNER EDITED' where slug = 'luxury-room';"

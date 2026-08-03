@@ -1,13 +1,14 @@
+import { OfferAnnouncement } from "@/components/OfferAnnouncement";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
-import { getSettings } from "@/lib/content";
+import { getAnnouncedOffer, getSettings } from "@/lib/content";
 
 /**
  * Chrome for the public website. The admin panel sits outside this group and
  * has its own layout, so it does not inherit the marketing header/footer.
  */
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
-  const settings = await getSettings();
+  const [settings, offer] = await Promise.all([getSettings(), getAnnouncedOffer()]);
 
   return (
     <>
@@ -20,6 +21,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       <SiteHeader settings={settings} />
       <main id="main">{children}</main>
       <SiteFooter settings={settings} />
+      {offer ? <OfferAnnouncement offer={offer} /> : null}
     </>
   );
 }

@@ -69,7 +69,7 @@ export default async function OffersPage() {
                     ) : null}
 
                     {offer.terms ? (
-                      <p className="mt-4 text-xs text-stone/80">{offer.terms}</p>
+                      <p className="mt-4 text-xs text-stone">{offer.terms}</p>
                     ) : null}
 
                     <Link

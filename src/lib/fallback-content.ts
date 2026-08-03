@@ -6,8 +6,10 @@ import type {
   Facility,
   GalleryItem,
   Room,
+  Offer,
   SiteSettings,
   Testimonial,
+  Video,
 } from "./types";
 
 /**
@@ -339,25 +341,68 @@ export const DEMO_APARTMENTS: Apartment[] = [
   image: [IMAGES.suiteBed, IMAGES.roomEvening, IMAGES.roomOutlook, IMAGES.roomDeluxe, IMAGES.roomSuperior][i] ?? null,
 }));
 
-export const DEMO_FACILITIES: Facility[] = [
-  ["facility", "Multi-Cuisine Restaurant", "All-day dining with Indian, Chinese and Continental menus.", "dining"],
-  ["facility", "Conference Room", "Meeting and conference space for corporate offsites.", "conference"],
-  ["facility", "Clubhouse", "Indoor games including table tennis, plus a gym.", "clubhouse"],
-  ["facility", "Parking Space", "On-site parking for residents and day guests.", "parking"],
-  ["booking_benefit", "No booking fee", "Book direct and pay no reservation charge.", "tag"],
-  ["booking_benefit", "Best rate guarantee", "The lowest available rate, direct from the resort.", "rate"],
-  ["booking_benefit", "Reservations 24/7", "Reach the front desk at any hour.", "clock"],
-  ["booking_benefit", "High-speed Wi-Fi", "Complimentary across the property.", "wifi"],
-  ["booking_benefit", "Flexible amendments", "Support in case of cancellation or amendment.", "calendar"],
-].map(([category, name, description, icon], i) => ({
+export const DEMO_FACILITIES: Facility[] = (
+  [
+    ["facility", "Multi-Cuisine Restaurant", "All-day dining with Indian, Chinese and Continental menus.", "dining", IMAGES.restaurantHall],
+    ["facility", "Conference Room", "Meeting and conference space for corporate offsites.", "conference", IMAGES.restaurantTable],
+    ["facility", "Clubhouse", "Indoor games including table tennis, plus a gym.", "clubhouse", IMAGES.suiteLounge],
+    ["facility", "Parking Space", "On-site parking for residents and day guests.", "parking", IMAGES.heroFront],
+    ["booking_benefit", "No booking fee", "Book direct and pay no reservation charge.", "tag", null],
+    ["booking_benefit", "Best rate guarantee", "The lowest available rate, direct from the resort.", "rate", null],
+    ["booking_benefit", "Reservations 24/7", "Reach the front desk at any hour.", "clock", null],
+    ["booking_benefit", "High-speed Wi-Fi", "Complimentary across the property.", "wifi", null],
+    ["booking_benefit", "Flexible amendments", "Support in case of cancellation or amendment.", "calendar", null],
+  ] as const
+).map(([category, name, description, icon, image], i) => ({
   id: `fac-${i}`,
   category: category as Facility["category"],
-  name: name as string,
-  description: description as string,
-  icon: icon as string,
+  name,
+  description,
+  icon,
+  image_id: null,
   sort_order: i + 1,
   published: true,
+  image,
 }));
+
+/**
+ * One seasonal offer, set to announce itself.
+ *
+ * It exists in the fixtures mainly so the announcement panel is visible
+ * without a database — the real ones are written in the admin panel. The
+ * dates are open-ended on purpose: a fixture with a fixed window would
+ * quietly stop appearing the moment it expired, which looks like a bug.
+ */
+export const DEMO_OFFERS: Offer[] = [
+  {
+    id: "offer-midweek",
+    slug: "midweek-in-the-hills",
+    title: "Midweek in the hills",
+    summary:
+      "Stay Sunday to Thursday and breakfast for two is on us, along with a late checkout at 2pm.",
+    body:
+      "The valley is at its best on a weekday — the roads are quiet and so is the terrace. Book any Sunday-to-Thursday night direct with the resort and breakfast for two is included, with checkout pushed back to 2pm so the morning is not a rush.",
+    terms: "Subject to availability. Not combinable with other offers. Direct bookings only.",
+    valid_from: null,
+    valid_to: null,
+    image_id: null,
+    announce: true,
+    announce_version: 1,
+    sort_order: 1,
+    published: true,
+    image: IMAGES.terraceValley,
+  },
+];
+
+/**
+ * Videos.
+ *
+ * Nothing is bundled — there is no film of the resort in the repository —
+ * so this is empty and the video band renders nothing until the owner adds
+ * one under Videos in the admin panel. An empty band is better than a
+ * placeholder that looks like a broken player.
+ */
+export const DEMO_VIDEOS: Video[] = [];
 
 export const DEMO_DINING: DiningItem[] = [
   ["thali", "Veg Thali", "Dal makhani, mix vegetable, rice, salad, roti, raita", "350 + GST per thali", IMAGES.restaurantHall],

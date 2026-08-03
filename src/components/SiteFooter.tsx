@@ -23,7 +23,7 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
   return (
     <footer className="on-green">
       <div className="shell py-16 md:py-20">
-        <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)_minmax(0,1fr)] lg:gap-16">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,1.1fr)] lg:gap-12">
           {/* Brand */}
           <div>
             <Logo settings={settings} tone="paper" className="items-start" />
@@ -40,44 +40,42 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
             ) : null}
           </div>
 
-          {/* Links */}
-          <div className="grid gap-10 sm:grid-cols-2 lg:block">
-            <nav aria-labelledby="footer-explore">
-              <h2 id="footer-explore" className="eyebrow mb-4">
-                Important links
-              </h2>
-              <ul className="space-y-2">
-                {[...PRIMARY_NAV.slice(1), ...SECONDARY_NAV].map((item) => (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      className="link-underline text-sm text-paper/75 hover:text-paper"
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
+          {/* Links — two columns of their own, not one stacked list */}
+          <nav aria-labelledby="footer-explore">
+            <h2 id="footer-explore" className="eyebrow mb-4">
+              Important links
+            </h2>
+            <ul className="space-y-2">
+              {[...PRIMARY_NAV.slice(1), ...SECONDARY_NAV].map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="link-underline text-sm text-paper/75 hover:text-paper"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
 
-            <nav aria-labelledby="footer-services" className="lg:mt-9">
-              <h2 id="footer-services" className="eyebrow mb-4">
-                At the resort
-              </h2>
-              <ul className="space-y-2">
-                {FOOTER_SERVICES.map((item) => (
-                  <li key={item.label}>
-                    <Link
-                      href={item.href}
-                      className="link-underline text-sm text-paper/75 hover:text-paper"
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          </div>
+          <nav aria-labelledby="footer-services">
+            <h2 id="footer-services" className="eyebrow mb-4">
+              At the resort
+            </h2>
+            <ul className="space-y-2">
+              {FOOTER_SERVICES.map((item) => (
+                <li key={item.label}>
+                  <Link
+                    href={item.href}
+                    className="link-underline text-sm text-paper/75 hover:text-paper"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
 
           {/* Location & newsletter */}
           <div>
@@ -127,12 +125,15 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
               </a>
             ) : null}
 
-            <div className="mt-8 border-t border-paper/15 pt-6">
-              <p className="mb-3 text-sm text-paper/70">
-                Seasonal offers and news, a few times a year.
-              </p>
-              <NewsletterForm />
-            </div>
+          </div>
+        </div>
+
+        <div className="mt-12 flex flex-col gap-4 border-t border-paper/15 pt-8 md:flex-row md:items-center md:justify-between">
+          <p className="max-w-sm text-sm text-paper/70">
+            Seasonal offers and news from the resort, a few times a year.
+          </p>
+          <div className="w-full max-w-md">
+            <NewsletterForm />
           </div>
         </div>
       </div>
