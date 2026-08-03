@@ -43,6 +43,12 @@ export type Resource = {
   /** Public URL pattern for a "view on site" link, `:slug` interpolated. */
   publicPath?: string;
   blurb?: string;
+  /**
+   * Show the bulk uploader on this resource's list screen. Set to the table
+   * each uploaded file should also be inserted into, or `true` to upload to
+   * the media library only.
+   */
+  bulkUpload?: "gallery_items" | true;
 };
 
 const PUBLISHED: Field = {
@@ -358,6 +364,7 @@ export const RESOURCES: Resource[] = [
     label: "Gallery",
     singular: "Gallery image",
     titleField: "caption",
+    bulkUpload: "gallery_items",
     blurb: "Photographs on the gallery page, grouped by category.",
     listFields: [{ name: "category", label: "Category" }],
     fields: [
