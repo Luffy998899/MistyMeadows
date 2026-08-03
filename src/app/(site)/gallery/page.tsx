@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import { EmptyState } from "@/components/EmptyState";
 import { MediaFrame } from "@/components/MediaFrame";
 import { PageHero } from "@/components/PageHero";
-import { getGallery } from "@/lib/content";
+import { VideoSection } from "@/components/VideoSection";
+import { getGallery, getVideos } from "@/lib/content";
 import { IMAGES } from "@/lib/media-library";
 
 export const metadata: Metadata = {
@@ -13,7 +14,10 @@ export const metadata: Metadata = {
 };
 
 export default async function GalleryPage() {
-  const items = await getGallery();
+  const [items, videos] = await Promise.all([getGallery(), getVideos()]);
+  const galleryVideos = videos.filter(
+    (v) => v.placement === "gallery" || v.placement === "both",
+  );
 
   // Group by the owner-set category so the page has structure rather than
   // being one long undifferentiated grid.
@@ -77,6 +81,13 @@ export default async function GalleryPage() {
           )}
         </div>
       </section>
+
+      <VideoSection
+        videos={galleryVideos}
+        eyebrow="Watch"
+        title="Films of the resort"
+        ground="on-green"
+      />
     </>
   );
 }

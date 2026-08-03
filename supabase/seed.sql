@@ -368,3 +368,51 @@ where map_url is null;
 update public.site_settings
 set socials = jsonb_build_object('facebook', 'https://www.facebook.com/mistymeadowsresorts/')
 where coalesce(socials, '{}'::jsonb) = '{}'::jsonb;
+
+-- ---------------------------------------------------------------------
+-- Facility photographs
+--
+-- Only the on-site facilities get one: the booking-direct benefits are
+-- icon-and-a-line by design, and a photograph on them would crowd the
+-- amenities grid. Guarded on `image_id is null`, so a picture chosen in
+-- the admin panel is never replaced.
+-- ---------------------------------------------------------------------
+
+update public.facilities f
+set image_id = m.id
+from public.media m
+where f.image_id is null
+  and f.category = 'facility'
+  and m.storage_path = case f.name
+    when 'Multi-Cuisine Restaurant' then '/media/restaurant-hall.jpg'
+    when 'Conference Room'          then '/media/restaurant-table.jpg'
+    when 'Clubhouse'                then '/media/suite-premium-lounge.jpg'
+    when 'Parking Space'            then '/media/slider-resort-front.jpg'
+  end;
+
+-- ---------------------------------------------------------------------
+-- One seasonal offer, set to announce itself
+--
+-- Open-ended on purpose: an offer with a fixed window would quietly stop
+-- appearing the moment it expired, which reads as a bug rather than as
+-- the offer having ended. The owner sets real dates in the admin panel.
+-- ---------------------------------------------------------------------
+
+insert into public.offers (slug, title, summary, body, terms, announce, sort_order)
+select 'midweek-in-the-hills',
+       'Midweek in the hills',
+       'Stay Sunday to Thursday and breakfast for two is on us, along with a late checkout at 2pm.',
+       'The valley is at its best on a weekday — the roads are quiet and so is the terrace. Book any Sunday-to-Thursday night direct with the resort and breakfast for two is included, with checkout pushed back to 2pm so the morning is not a rush.',
+       'Subject to availability. Not combinable with other offers. Direct bookings only.',
+       true,
+       1
+where not exists (
+  select 1 from public.offers o where o.slug = 'midweek-in-the-hills'
+);
+
+update public.offers o
+set image_id = m.id
+from public.media m
+where o.image_id is null
+  and o.slug = 'midweek-in-the-hills'
+  and m.storage_path = '/media/terrace-valley-view.jpg';

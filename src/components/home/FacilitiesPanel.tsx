@@ -75,15 +75,34 @@ export function FacilitiesPanel({
                 as="li"
                 key={facility.id}
                 delay={i * 100}
-                className="card flex flex-col items-center px-5 py-8 text-center"
+                className="card flex flex-col overflow-hidden"
               >
-                <Icon name={facility.icon} className="h-8 w-8 text-green" />
-                <h3 className="mt-4 font-display text-[1.1875rem] leading-snug text-ink">
-                  {facility.name}
-                </h3>
-                <p className="mt-2 text-[0.8125rem] leading-relaxed text-stone">
-                  {facility.description}
-                </p>
+                {/* A photograph if the owner has attached one; the icon
+                    carries the card on its own if not. */}
+                {facility.image ? (
+                  <MediaFrame
+                    media={facility.image}
+                    ratio="16 / 10"
+                    sizes="(max-width: 640px) 100vw, 22vw"
+                    zoom
+                  />
+                ) : null}
+
+                <div className="flex flex-1 flex-col items-center px-5 py-7 text-center">
+                  {facility.image ? null : (
+                    <Icon name={facility.icon} className="h-8 w-8 text-green" />
+                  )}
+                  <h3
+                    className={`font-display text-[1.1875rem] leading-snug text-ink ${
+                      facility.image ? "" : "mt-4"
+                    }`}
+                  >
+                    {facility.name}
+                  </h3>
+                  <p className="mt-2 text-[0.8125rem] leading-relaxed text-stone">
+                    {facility.description}
+                  </p>
+                </div>
               </Reveal>
             ))}
           </ul>

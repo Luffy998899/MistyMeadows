@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { RESOURCES } from "@/lib/admin/resources";
-import { getMailSettings, isMailConfigured } from "@/lib/mail";
+import { getMailSettings, isMailConfigured, isResendConfigured, mailProvider } from "@/lib/mail";
 import { createClient } from "@/lib/supabase/server";
 import type { Enquiry } from "@/lib/types";
 
@@ -42,14 +42,26 @@ export default async function AdminHome() {
           <h2 className="font-display text-[1.0625rem]">Email notifications are off</h2>
           <p className="mt-1.5 text-sm text-stone">
             Enquiries are still saved and listed here, but nothing is emailed to
-            you yet. Add your SMTP details under{" "}
+            you yet.{" "}
+            {isResendConfigured()
+              ? "Resend is connected, but there is no sending address — add one under "
+              : "Add a sending address and either a Resend API key or your SMTP details under "}
             <Link href="/admin/settings#mail" className="link-underline text-wine">
               Settings → Email
             </Link>
             .
           </p>
         </div>
-      ) : null}
+      ) : (
+        <p className="mt-6 text-sm text-stone">
+          Enquiries are emailed to you via{" "}
+          <span className="font-medium text-ink">
+            {mailProvider(mail) === "resend" ? "Resend" : "SMTP"}
+          </span>
+          , and every one is listed under Enquiries whether or not the email got
+          through.
+        </p>
+      )}
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
         <Link

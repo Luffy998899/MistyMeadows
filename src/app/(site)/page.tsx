@@ -1,4 +1,5 @@
 import { Testimonials } from "@/components/Testimonials";
+import { VideoSection } from "@/components/VideoSection";
 import { AmenitiesGrid } from "@/components/home/AmenitiesGrid";
 import { AvailabilityBar } from "@/components/home/AvailabilityBar";
 import { CallBand } from "@/components/home/CallBand";
@@ -19,18 +20,23 @@ import {
   getRooms,
   getSettings,
   getTestimonials,
+  getVideos,
 } from "@/lib/content";
 import { HERO_SLIDES, IMAGES } from "@/lib/media-library";
 
 export default async function HomePage() {
-  const [settings, rooms, facilities, dining, testimonials, gallery] = await Promise.all([
-    getSettings(),
-    getRooms(),
-    getFacilities(),
-    getDining(),
-    getTestimonials(),
-    getGallery(),
-  ]);
+  const [settings, rooms, facilities, dining, testimonials, gallery, videos] =
+    await Promise.all([
+      getSettings(),
+      getRooms(),
+      getFacilities(),
+      getDining(),
+      getTestimonials(),
+      getGallery(),
+      getVideos(),
+    ]);
+
+  const homeVideos = videos.filter((v) => v.placement === "home" || v.placement === "both");
 
   const amenities = facilities.filter((f) => f.category === "facility");
   const benefits = facilities.filter((f) => f.category === "booking_benefit");
@@ -112,6 +118,13 @@ export default async function HomePage() {
       <PanoramaBand
         media={IMAGES.panorama}
         caption="The entrance, the gardens and the old sandstone carving by the door"
+      />
+
+      <VideoSection
+        videos={homeVideos}
+        eyebrow="Watch"
+        title="The resort, on film"
+        lead="A few minutes of the property, the valley and the terrace — better than any amount of description."
       />
 
       <QuoteBand>

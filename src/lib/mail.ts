@@ -1,6 +1,7 @@
 import "server-only";
 
 import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 import { createAdminClient } from "./supabase/admin";
 import { isSupabaseConfigured } from "./supabase/env";
@@ -9,10 +10,49 @@ import type { Enquiry, MailSettings } from "./types";
 /**
  * Outbound mail.
  *
- * SMTP credentials live in `secure_settings`, which the owner fills in from
- * /admin/settings — no redeploy, no env var. That table has RLS on and no
- * policies, so only the service-role client below can read it.
+ * Two ways to send, tried in this order:
+ *
+ *  1. **Resend**, when `RESEND_API_KEY` is set. An API key rather than SMTP
+ *     credentials, so there is nothing in the database to leak, and it is
+ *     what this site is deployed with.
+ *  2. **SMTP**, from `secure_settings`, which the owner fills in at
+ *     /admin/settings — no redeploy, no env var. That table has RLS on and
+ *     no policies, so only the service-role client below can read it.
+ *
+ * Addresses come from `secure_settings` either way, so the owner can change
+ * who gets notified without touching the deployment. Where nothing is set,
+ * enquiries go to the resort's published address.
  */
+
+/** Where enquiries go when the admin panel has not been told otherwise. */
+const DEFAULT_NOTIFY = "info@mistymeadowsresorts.com";
+
+/**
+ * Resend will only send from a domain verified on the account, so there is
+ * no safe hardcoded default here — an unverified `from` is rejected at the
+ * API rather than silently dropped, which is the behaviour we want.
+ */
+function resendClient(): Resend | null {
+  const key = process.env.RESEND_API_KEY?.trim();
+  return key ? new Resend(key) : null;
+}
+
+function notifyList(settings: MailSettings | null): string[] {
+  const configured = settings?.notify_emails?.filter((address) => address?.trim());
+  if (configured && configured.length > 0) return configured;
+
+  const fromEnv = process.env.MAIL_TO?.split(",").map((a) => a.trim()).filter(Boolean);
+  if (fromEnv && fromEnv.length > 0) return fromEnv;
+
+  return [DEFAULT_NOTIFY];
+}
+
+function fromAddress(settings: MailSettings | null): string | null {
+  const address = settings?.from_email?.trim() || process.env.MAIL_FROM?.trim();
+  if (!address) return null;
+  const name = settings?.from_name?.trim() || "Misty Meadows Resorts";
+  return `${name} <${address}>`;
+}
 
 export async function getMailSettings(): Promise<MailSettings | null> {
   if (!isSupabaseConfigured() || !process.env.SUPABASE_SERVICE_ROLE_KEY) return null;
@@ -27,11 +67,26 @@ export async function getMailSettings(): Promise<MailSettings | null> {
   return (data as MailSettings) ?? null;
 }
 
-export function isMailConfigured(settings: MailSettings | null): settings is MailSettings {
-  return Boolean(
-    settings?.smtp_host && settings.smtp_port && settings.from_email &&
-      settings.notify_emails.length > 0,
-  );
+/** True when SMTP alone could send — i.e. without Resend in the picture. */
+export function isSmtpConfigured(settings: MailSettings | null): settings is MailSettings {
+  return Boolean(settings?.smtp_host && settings.smtp_port && settings.from_email);
+}
+
+export function isResendConfigured(): boolean {
+  return Boolean(process.env.RESEND_API_KEY?.trim());
+}
+
+/** Whether an enquiry notification can actually be delivered right now. */
+export function isMailConfigured(settings: MailSettings | null): boolean {
+  if (isResendConfigured()) return Boolean(fromAddress(settings));
+  return isSmtpConfigured(settings);
+}
+
+/** Which transport a send would use, for the admin panel to display. */
+export function mailProvider(settings: MailSettings | null): "resend" | "smtp" | null {
+  if (isResendConfigured() && fromAddress(settings)) return "resend";
+  if (isSmtpConfigured(settings)) return "smtp";
+  return null;
 }
 
 function transportFor(settings: MailSettings) {
@@ -108,53 +163,126 @@ function renderEnquiry(enquiry: EnquiryPayload): { text: string; html: string } 
 
 export type MailResult = { sent: boolean; error?: string };
 
-/** Emails the owner. Never throws — the enquiry is already saved either way. */
-export async function sendEnquiryNotification(enquiry: EnquiryPayload): Promise<MailResult> {
-  const settings = await getMailSettings();
+type Message = {
+  to: string[];
+  from: string;
+  replyTo?: string;
+  subject: string;
+  text: string;
+  html?: string;
+};
 
-  if (!isMailConfigured(settings)) {
-    return { sent: false, error: "SMTP is not configured in the admin panel" };
+/**
+ * One send, over whichever transport is configured.
+ *
+ * Never throws: an enquiry is written to the database before this is called,
+ * and a mail outage must not lose it or fail the guest's submission. The
+ * reason is returned instead, and recorded against the enquiry so the
+ * failure is visible in the admin inbox rather than silent.
+ */
+async function deliver(settings: MailSettings | null, message: Message): Promise<MailResult> {
+  const resend = resendClient();
+
+  if (resend) {
+    try {
+      const { error } = await resend.emails.send({
+        from: message.from,
+        to: message.to,
+        replyTo: message.replyTo,
+        subject: message.subject,
+        text: message.text,
+        ...(message.html ? { html: message.html } : {}),
+      });
+
+      // The SDK reports failures in the payload rather than by throwing, so
+      // this branch is the one that actually catches a rejected send.
+      if (error) {
+        const detail = `${error.name}: ${error.message}`;
+        console.error(`[mail] resend rejected the message — ${detail}`);
+        return { sent: false, error: detail };
+      }
+      return { sent: true };
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "Unknown Resend error";
+      console.error(`[mail] resend request failed — ${detail}`);
+      return { sent: false, error: detail };
+    }
+  }
+
+  if (!isSmtpConfigured(settings)) {
+    return {
+      sent: false,
+      error: "No mail transport configured — set RESEND_API_KEY, or fill in SMTP under Settings.",
+    };
   }
 
   try {
-    const { text, html } = renderEnquiry(enquiry);
-
     await transportFor(settings).sendMail({
-      from: `"${settings.from_name ?? "Misty Meadows Resorts"}" <${settings.from_email}>`,
-      to: settings.notify_emails.join(", "),
-      // So the owner can hit Reply and reach the guest directly.
-      replyTo: enquiry.email || settings.reply_to || undefined,
-      subject: `New enquiry — ${enquiry.name}${enquiry.room_name ? ` · ${enquiry.room_name}` : ""}`,
-      text,
-      html,
+      from: message.from,
+      to: message.to.join(", "),
+      replyTo: message.replyTo,
+      subject: message.subject,
+      text: message.text,
+      html: message.html,
     });
-
     return { sent: true };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown mail error";
-    console.error(`[mail] enquiry notification failed: ${message}`);
-    return { sent: false, error: message };
+    const detail = error instanceof Error ? error.message : "Unknown mail error";
+    console.error(`[mail] smtp send failed — ${detail}`);
+    return { sent: false, error: detail };
   }
+}
+
+/** Emails the owner. Never throws — the enquiry is already saved either way. */
+export async function sendEnquiryNotification(enquiry: EnquiryPayload): Promise<MailResult> {
+  const settings = await getMailSettings();
+  const from = fromAddress(settings);
+
+  if (!from) {
+    return {
+      sent: false,
+      error:
+        "No sending address set. Add MAIL_FROM (a address on a domain verified with Resend), " +
+        "or fill in the from address under Settings → Email.",
+    };
+  }
+
+  const { text, html } = renderEnquiry(enquiry);
+
+  return deliver(settings, {
+    to: notifyList(settings),
+    from,
+    // So the owner can hit Reply and reach the guest directly.
+    replyTo: enquiry.email || settings?.reply_to || undefined,
+    subject: `New enquiry — ${enquiry.name}${enquiry.room_name ? ` · ${enquiry.room_name}` : ""}`,
+    text,
+    html,
+  });
 }
 
 /** Used by the "Send test email" button on /admin/settings. */
 export async function sendTestEmail(): Promise<MailResult> {
   const settings = await getMailSettings();
+  const from = fromAddress(settings);
 
-  if (!isMailConfigured(settings)) {
-    return { sent: false, error: "Fill in SMTP host, port, from address and at least one notification address first." };
+  if (!from) {
+    return {
+      sent: false,
+      error:
+        "Set a from address first — under Settings → Email, or as MAIL_FROM. With Resend it " +
+        "must be on a domain verified with your Resend account.",
+    };
   }
 
-  try {
-    await transportFor(settings).sendMail({
-      from: `"${settings.from_name ?? "Misty Meadows Resorts"}" <${settings.from_email}>`,
-      to: settings.notify_emails.join(", "),
-      subject: "Misty Meadows — test email",
-      text: "This is a test from your website admin panel. If you are reading this, enquiry notifications will reach you.",
-    });
-    return { sent: true };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown mail error";
-    return { sent: false, error: message };
-  }
+  const to = notifyList(settings);
+
+  return deliver(settings, {
+    to,
+    from,
+    subject: "Misty Meadows — test email",
+    text:
+      `This is a test from your website admin panel, sent via ` +
+      `${mailProvider(settings) === "resend" ? "Resend" : "SMTP"}. ` +
+      `If you are reading this, enquiry notifications will reach ${to.join(", ")}.`,
+  });
 }

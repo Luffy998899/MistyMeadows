@@ -15,20 +15,23 @@ export const PRIMARY_NAV: NavItem[] = [
   { href: "/dining", label: "Dining" },
   { href: "/facilities", label: "Facilities" },
   { href: "/attractions", label: "Attractions" },
-  { href: "/offers", label: "Offers" },
+  { href: "/gallery", label: "Gallery" },
   { href: "/contact", label: "Contact" },
 ];
 
 export const NAV_SPLIT = 4;
 
 /**
- * Gallery and News are deliberately not in the header — they are reached
- * from the home page's gallery strip and from the footer instead, so the
- * top-level menu stays down to the things a guest is choosing between.
- * They are still in the footer so neither page is orphaned.
+ * Not in the header, but linked from the footer and the mobile panel so
+ * neither page is orphaned.
+ *
+ * Offers are off the menu on purpose: a current offer announces itself in a
+ * panel over the site instead (see `OfferAnnouncement`), which is worth more
+ * than a link most guests never click. The page stays for the panel and the
+ * footer to link to.
  */
 export const SECONDARY_NAV: NavItem[] = [
-  { href: "/gallery", label: "Gallery" },
+  { href: "/offers", label: "Offers" },
   { href: "/journal", label: "News & Events" },
 ];
 

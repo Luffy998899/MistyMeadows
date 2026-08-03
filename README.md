@@ -16,12 +16,13 @@ Everything on the public site is stored in the database and edited at
 | --- | --- |
 | Rooms & suites | Room types, rates, features, photographs |
 | Long-stay apartments | Monthly-let inventory and rates |
-| Facilities & benefits | On-site facilities, and the "booking direct" points |
+| Facilities & benefits | On-site facilities with photographs, and the "booking direct" points |
 | Dining | Thalis, picnic packages, prices |
 | Testimonials | Guest reviews and star ratings |
 | Attractions | Places to visit nearby, with distances and photographs |
+| Videos | Films of the resort — an upload or a YouTube/Vimeo link |
 | Gallery | Photographs, grouped by category |
-| Offers | Seasonal packages with validity dates |
+| Offers | Seasonal packages, validity dates, and which one announces itself |
 | News & events | Posts, with optional future publish dates |
 | Enquiries | Every website enquiry, with status and CSV export |
 | Settings | Address, phones, emails, social links, logo, hero image, SMTP |
@@ -45,6 +46,8 @@ At [supabase.com](https://supabase.com), create a project, then open
 1. `supabase/migrations/0001_init.sql` — tables, row level security,
    storage bucket
 1. `supabase/migrations/0002_attractions.sql` — the attractions table
+1. `supabase/migrations/0003_facility_photos_offers_videos.sql` — facility
+   photographs, offer announcements, and the videos table
 2. `supabase/seed.sql` — the real resort content transcribed from the
    existing website (rooms, apartments, dining rates, testimonials, address)
 
@@ -110,17 +113,49 @@ origins you actually serve from.
 
 ### 5. Turn on email notifications
 
-Sign in at `/admin`, go to **Settings → Email**, and enter the SMTP details of
-the mailbox that should send notifications. Then use **Send test email** to
-confirm it works.
+Enquiries go to **info@mistymeadowsresorts.com** unless Settings → Email says
+otherwise. There are two ways to send them.
 
-For Gmail / Google Workspace: host `smtp.gmail.com`, port `587`, and an
+**Resend (what this site uses).** Put the API key in the environment:
+
+```bash
+RESEND_API_KEY=re_your_api_key
+MAIL_FROM=website@mistymeadowsresorts.com
+```
+
+`MAIL_FROM` must be on a domain verified on your Resend account — Resend
+rejects an unverified sender outright rather than dropping it silently.
+Settings → Email overrides both addresses if you fill them in there.
+
+**SMTP,** if you would rather not use an API key: sign in at `/admin`, go to
+**Settings → Email**, and enter the mailbox details. For Gmail / Google
+Workspace that is host `smtp.gmail.com`, port `587`, and an
 [app password](https://support.google.com/accounts/answer/185833) — not the
 account password.
+
+Resend wins when its key is present. Either way, **Send test email** confirms
+it, and the dashboard says which transport is in use.
 
 Enquiries are saved to the database whether or not email is configured, so
 nothing is ever lost. If a notification fails to send, the reason is recorded
 against that enquiry and shown in the admin inbox.
+
+---
+
+## Offers announce themselves
+
+There is no "Offers" item in the menu. Instead, tick **Announce this offer
+over the site** on an offer and it opens in a panel a moment after any page
+loads, with a link straight to the enquiry form.
+
+It closes when the guest closes it, and stays closed — the dismissal is
+stored against the offer's slug *and* its announcement version. So publishing
+a different offer brings the panel back; editing the wording of the same one
+does not, until you add one to **Announcement version**. That field is how
+you reach guests who already dismissed the previous wording.
+
+Only the first announced offer that is currently valid is shown, so an
+expired offer stops appearing on its own.
 
 ---
 
@@ -188,7 +223,13 @@ With a server running on port 3210:
 node scripts/screenshot.mjs /rooms rooms 1440,768,375   # layout at each width
 node scripts/contrast.mjs / /rooms /contact             # WCAG AA contrast
 node scripts/interactions.mjs                           # nav, keyboard, forms
+node scripts/check-video-links.mjs                      # YouTube/Vimeo parsing
 ```
+
+`check-video-links.mjs` needs no server. It exercises the parser in
+`src/lib/video.ts`, whose output goes straight into an `iframe src` — the
+assertions that matter are the ones proving an unrecognised URL is rejected
+rather than embedded.
 
 `screenshot.mjs` writes to `.screenshots/` and reports horizontal overflow,
 failed requests and console errors. `contrast.mjs` measures *rendered* colour
