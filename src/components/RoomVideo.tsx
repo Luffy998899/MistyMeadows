@@ -12,7 +12,7 @@ export function RoomVideo({ media }: { media: Media }) {
   if (!media.public_url) return null;
 
   return (
-    <figure className="media-frame aspect-video w-full bg-umber">
+    <figure className="media-frame aspect-video w-full bg-green-ink">
       <video
         src={media.public_url}
         controls

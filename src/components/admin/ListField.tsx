@@ -84,7 +84,7 @@ export function ListField({
               onClick={() => remove(index)}
               aria-label={`Remove ${label.toLowerCase()} ${index + 1}`}
               title="Remove"
-              className="flex h-11 w-11 shrink-0 items-center justify-center border border-paper-edge text-stone transition-colors hover:border-bark hover:text-bark"
+              className="flex h-11 w-11 shrink-0 items-center justify-center border border-paper-edge text-stone transition-colors hover:border-wine hover:text-wine"
             >
               <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" aria-hidden="true">
                 <path d="M5 5l14 14M19 5L5 19" stroke="currentColor" strokeWidth="1.6" />
@@ -97,7 +97,7 @@ export function ListField({
       <button
         type="button"
         onClick={() => setRows((current) => [...current, ""])}
-        className="link-underline mt-2 text-xs text-bark"
+        className="link-underline mt-2 text-xs text-wine"
       >
         + Add another
       </button>

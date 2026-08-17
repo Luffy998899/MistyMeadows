@@ -5,7 +5,7 @@ import type { Facility } from "@/lib/types";
 
 /**
  * Hairline-divided cells rather than filled tiles, so the grid sits on any
- * section ground (paper, sage, sand) without carrying its own background.
+ * section ground (paper, cream, mint) without carrying its own background.
  */
 export function FacilitiesGrid({ facilities }: { facilities: Facility[] }) {
   if (facilities.length === 0) return null;
