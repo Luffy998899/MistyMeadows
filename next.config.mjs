@@ -80,6 +80,34 @@ const allowedOrigins = [
   ...(process.env.NODE_ENV === "development" ? DEV_ORIGINS : []),
 ];
 
+/*
+  Build parallelism.
+
+  Next sizes its build-worker pool from the CPU count *and* free memory
+  (`Math.min(cpus, freemem / 1e9)`), so a large host spawns a lot of workers
+  — and every worker starts its own rayon thread pool inside SWC. On a
+  32-core box that is easily a thousand threads, which is enough to hit a
+  container's pid ceiling or a large `ulimit -s` and fail with:
+
+    panicked ... The global thread pool has not been initialized.
+    ... IOError(Os { code: 11, kind: WouldBlock })
+
+  Capping the workers is what actually reduces the thread count;
+  RAYON_NUM_THREADS alone does not, because the workers are separate
+  processes. Left unset, Next's own defaults apply.
+*/
+const buildCpus = Number.parseInt(process.env.NEXT_BUILD_CPUS ?? "", 10);
+
+const parallelism = {
+  ...(Number.isFinite(buildCpus) && buildCpus > 0 ? { cpus: buildCpus } : {}),
+  ...(process.env.NEXT_BUILD_WORKER_THREADS === "false" ? { workerThreads: false } : {}),
+};
+
+const experimental = {
+  ...(allowedOrigins.length > 0 ? { serverActions: { allowedOrigins } } : {}),
+  ...parallelism,
+};
+
 const nextConfig = {
   images: {
     remotePatterns: supabaseHost
@@ -87,9 +115,7 @@ const nextConfig = {
       : [],
     formats: ["image/avif", "image/webp"],
   },
-  ...(allowedOrigins.length > 0
-    ? { experimental: { serverActions: { allowedOrigins } } }
-    : {}),
+  ...(Object.keys(experimental).length > 0 ? { experimental } : {}),
 };
 
 export default nextConfig;

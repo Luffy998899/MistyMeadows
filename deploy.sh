@@ -237,38 +237,82 @@ fi
 
 step "Building"
 
-# Next's Rust toolchain builds a rayon thread pool at start-up. On a small
-# VPS, a low process/thread ceiling makes that spawn fail with EAGAIN and
-# the build dies with:
+# Next spawns a pool of build workers, and each one starts its own rayon
+# thread pool inside SWC. When a thread cannot be created the build dies
+# with:
 #
 #   panicked ... The global thread pool has not been initialized.
-#   ... IOError(Os { code: 11, kind: WouldBlock })
+#   ... IOError(Os { code: 11, kind: WouldBlock })    <- EAGAIN
+#   Next.js build worker exited with code: null and signal: SIGABRT
 #
-# Capping the pool avoids it. Report the limits first so a genuinely
-# undersized box is obvious rather than mysterious.
-CPUS="$(nproc 2>/dev/null || echo 1)"
-MEM_MB="$(awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo 2>/dev/null || echo 0)"
-THREAD_LIMIT="$(ulimit -u 2>/dev/null || echo unlimited)"
-info "${CPUS} CPU(s), ${MEM_MB} MB RAM, process limit ${THREAD_LIMIT}"
+# EAGAIN on thread creation is almost never "too few CPUs". The usual
+# causes, in order of how often they bite:
+#
+#   1. `ulimit -s unlimited` (or a very large value). Each new thread
+#      reserves RLIMIT_STACK of address space, so an unbounded stack makes
+#      pthread_create fail however much RAM the box has.
+#   2. A container pid ceiling (cgroup `pids.max`) far below what `ulimit -u`
+#      reports — `ulimit -u` shows the rlimit, not the cgroup controller.
+#   3. Genuinely too many threads: workers x rayon threads on a big host.
+#
+# Print all of it, so the real constraint is visible rather than guessed at.
 
-if [ "$MEM_MB" -gt 0 ] && [ "$MEM_MB" -lt 1800 ]; then
-  warn "Under ~2 GB of RAM. If the build is killed, add swap:"
-  warn "  sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile"
-  warn "  sudo mkswap /swapfile && sudo swapon /swapfile"
-  export NODE_OPTIONS="${NODE_OPTIONS:-} --max-old-space-size=1024"
-fi
+report_limits() {
+  local pids_max="n/a" pids_cur="n/a"
+  if [ -r /sys/fs/cgroup/pids.max ]; then
+    pids_max="$(cat /sys/fs/cgroup/pids.max)"
+    pids_cur="$(cat /sys/fs/cgroup/pids.current 2>/dev/null || echo '?')"
+  elif [ -r /sys/fs/cgroup/pids/pids.max ]; then
+    pids_max="$(cat /sys/fs/cgroup/pids/pids.max)"
+    pids_cur="$(cat /sys/fs/cgroup/pids/pids.current 2>/dev/null || echo '?')"
+  fi
 
-run_build() { # run_build <rayon-threads>
-  env RAYON_NUM_THREADS="$1" NEXT_TELEMETRY_DISABLED=1 npm run build
+  info "CPUs            $(nproc 2>/dev/null || echo '?')"
+  info "RAM             $(awk '/MemTotal/ {print int($2/1024)" MB"}' /proc/meminfo 2>/dev/null || echo '?')"
+  info "stack limit     $(ulimit -s)        <- 'unlimited' here is the usual culprit"
+  info "process limit   $(ulimit -u)"
+  info "cgroup pids     ${pids_cur} / ${pids_max}"
+  info "threads-max     $(cat /proc/sys/kernel/threads-max 2>/dev/null || echo '?')"
+  info "max_map_count   $(cat /proc/sys/vm/max_map_count 2>/dev/null || echo '?')"
 }
 
-if ! run_build "$CPUS"; then
-  warn "Build failed. Retrying single-threaded — slower, but survives a low"
-  warn "thread ceiling, which is the usual cause on a small VPS."
+report_limits
+
+build_default() {
+  NEXT_TELEMETRY_DISABLED=1 npm run build
+}
+
+# Constrained retry. A bounded stack is the fix for cause 1; capping the
+# worker pool (NEXT_BUILD_CPUS, read by next.config.mjs) is what actually
+# reduces the total thread count for causes 2 and 3 — RAYON_NUM_THREADS on
+# its own does not, because each worker is a separate process that sets up
+# its own pool.
+build_constrained() {
+  ( ulimit -s 8192 2>/dev/null || true
+    NEXT_TELEMETRY_DISABLED=1 \
+    NEXT_BUILD_CPUS=1 \
+    NEXT_BUILD_WORKER_THREADS=false \
+    RAYON_NUM_THREADS=1 \
+    npm run build )
+}
+
+if ! build_default; then
+  warn "Build failed. Retrying with a bounded stack and a single build worker."
   rm -rf .next
-  run_build 1 || die "Build failed again. Check the output above; if it is
-    still the rayon thread-pool panic, raise the limit with
-    'ulimit -u 4096' or add swap, then re-run."
+  if ! build_constrained; then
+    printf '\n'
+    warn "Still failing. Read the limits printed above:"
+    warn ""
+    warn "  stack limit 'unlimited'  ->  run:  ulimit -s 8192 && ./deploy.sh ..."
+    warn "  cgroup pids near its max ->  raise the container's pids limit"
+    warn "                               (docker run --pids-limit=8192, or"
+    warn "                                LimitNPROC= in the systemd unit)"
+    warn ""
+    warn "To build by hand with everything constrained:"
+    warn "  ulimit -s 8192"
+    warn "  NEXT_BUILD_CPUS=1 NEXT_BUILD_WORKER_THREADS=false npm run build"
+    die "Build failed."
+  fi
 fi
 
 # ---------------------------------------------------------------------

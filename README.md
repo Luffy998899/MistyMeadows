@@ -462,23 +462,35 @@ panicked ... The global thread pool has not been initialized.
 Next.js build worker exited with code: null and signal: SIGABRT
 ```
 
-That is not a code error. Next's Rust toolchain builds a thread pool at
-start-up, and on a small VPS a low process ceiling makes the spawn fail with
-`EAGAIN`. `deploy.sh` handles it: it prints the CPU, RAM and process limit
-before building, and retries single-threaded if the first attempt fails.
+`code: 11` is `EAGAIN` — the kernel refusing to create a thread. It is not a
+code fault, and it is **not** usually a shortage of CPU or RAM; it happens on
+large hosts too. Next spawns a pool of build workers sized from CPU count and
+free memory, and each worker starts its own rayon thread pool inside SWC, so a
+big machine can ask for well over a thousand threads.
 
-To build by hand on such a box:
+Three things cause the refusal, in the order they usually bite:
+
+1. **`ulimit -s unlimited`** — every thread reserves `RLIMIT_STACK` of address
+   space, so an unbounded stack makes `pthread_create` fail no matter how much
+   memory the box has. This is the most common one.
+2. **A container pid ceiling** — cgroup `pids.max` far below what `ulimit -u`
+   reports. `ulimit -u` shows the rlimit, not the cgroup controller.
+3. **Too many threads outright** — workers × rayon threads on a many-core host.
+
+`deploy.sh` prints all of these before building, then retries with a bounded
+stack and a single build worker. To do it by hand:
 
 ```bash
-RAYON_NUM_THREADS=1 npm run build
+ulimit -s 8192
+NEXT_BUILD_CPUS=1 NEXT_BUILD_WORKER_THREADS=false npm run build
 ```
 
-If it is killed rather than panicking, the box is out of memory — add swap:
+`NEXT_BUILD_CPUS` caps Next's worker pool (`experimental.cpus`), which is what
+actually reduces the thread count. `RAYON_NUM_THREADS` alone does not help,
+because each worker is a separate process that builds its own pool.
 
-```bash
-sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile
-sudo mkswap /swapfile && sudo swapon /swapfile
-```
+If the container is the constraint, raise its limit instead —
+`docker run --pids-limit=8192`, or `LimitNPROC=` in the systemd unit.
 
 ### Credentials
 
