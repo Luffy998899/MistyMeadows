@@ -2,25 +2,31 @@
 #
 # Misty Meadows Resorts — deploy
 #
-#   ./deploy.sh                     ask for a domain, then build and serve
-#   ./deploy.sh --local             run on localhost, skip the prompt
+#   ./deploy.sh                     build, then start the site
 #   ./deploy.sh --domain example.com --email you@example.com
-#   ./deploy.sh --skip-build        serve a .next that was built elsewhere
+#   ./deploy.sh --local             localhost only, skip the prompt
+#   ./deploy.sh --skip-build        serve a .next built elsewhere
 #   ./deploy.sh --build-only        just build, change nothing else
 #   ./deploy.sh --dry-run           report what would happen
 #
-# Leave the domain blank and the site runs locally. Give one and it is
-# published behind nginx with a Let's Encrypt certificate from certbot.
+#   ./deploy.sh --status            is it running?
+#   ./deploy.sh --logs              follow the log
+#   ./deploy.sh --restart           restart it
+#   ./deploy.sh --stop              stop it
 #
-# On restricted hosting (a per-account process cap), see "Building" below:
-# the build is retried under tightening limits, and --skip-build is the
-# escape hatch.
+# Works with or without root. With root it installs nginx, a systemd unit
+# and a certbot certificate. Without root — shared hosting, no sudo — it
+# runs the site under your own account and prints how to point the domain
+# at it through your hosting panel.
 #
 set -euo pipefail
 
 APP_NAME="misty-meadows"
 APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ENV_FILE="$APP_DIR/.env.local"
+RUN_DIR="$APP_DIR/.deploy"
+PID_FILE="$RUN_DIR/app.pid"
+LOG_FILE="$RUN_DIR/app.log"
 
 PORT="${PORT:-3000}"
 DOMAIN=""
@@ -30,8 +36,10 @@ SKIP_BUILD=false
 BUILD_ONLY=false
 DRY_RUN=false
 STAGING=false
+ACTION="deploy"
 
 cd "$APP_DIR"
+mkdir -p "$RUN_DIR"
 
 # =====================================================================
 # Output
@@ -65,10 +73,121 @@ while [ $# -gt 0 ]; do
     --build-only) BUILD_ONLY=true; shift ;;
     --dry-run)    DRY_RUN=true; shift ;;
     --staging)    STAGING=true; shift ;;   # test certs, avoids rate limits
-    -h|--help)    sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    --status)     ACTION="status"; shift ;;
+    --logs)       ACTION="logs"; shift ;;
+    --stop)       ACTION="stop"; shift ;;
+    --restart)    ACTION="restart"; shift ;;
+    -h|--help)    sed -n '2,21p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *)            die "Unknown option: $1  (try --help)" ;;
   esac
 done
+
+# =====================================================================
+# Privilege
+#
+# Shared hosting gives a plain user: no sudo, no su, no package manager.
+# Detect that once, and take the unprivileged path rather than failing.
+# =====================================================================
+
+SUDO=""
+HAVE_ROOT=false
+
+if [ "$(id -u)" -eq 0 ]; then
+  HAVE_ROOT=true
+elif command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
+  HAVE_ROOT=true
+  SUDO="sudo"
+fi
+
+# =====================================================================
+# Process control (no systemd required)
+# =====================================================================
+
+app_pid() {
+  [ -f "$PID_FILE" ] || return 1
+  local pid
+  pid="$(cat "$PID_FILE" 2>/dev/null || true)"
+  [ -n "$pid" ] || return 1
+  kill -0 "$pid" 2>/dev/null || return 1
+  printf '%s' "$pid"
+}
+
+start_app() {
+  if app_pid >/dev/null; then
+    info "Already running as pid $(app_pid)"
+    return 0
+  fi
+
+  [ -d .next ] || die "Nothing built yet. Run ./deploy.sh first."
+
+  # `next` directly rather than `npm start`: one process to track instead of
+  # npm plus its child, which also matters when the account has a low
+  # process cap. setsid detaches it so it survives logout.
+  setsid nohup ./node_modules/.bin/next start -p "$PORT" \
+    >>"$LOG_FILE" 2>&1 < /dev/null &
+  echo $! > "$PID_FILE"
+
+  # Give it a moment, then confirm it is actually up rather than assuming.
+  local waited=0
+  while [ "$waited" -lt 20 ]; do
+    if ! app_pid >/dev/null; then
+      warn "The site exited immediately. Last lines of $LOG_FILE:"
+      tail -n 20 "$LOG_FILE" 2>/dev/null | sed 's/^/    /'
+      return 1
+    fi
+    if curl -fsS -o /dev/null --max-time 2 "http://127.0.0.1:${PORT}/" 2>/dev/null; then
+      info "Running as pid $(app_pid) on 127.0.0.1:${PORT}"
+      return 0
+    fi
+    sleep 1
+    waited=$((waited + 1))
+  done
+
+  warn "Started as pid $(app_pid), but it did not answer on port ${PORT} yet."
+  warn "Check: ./deploy.sh --logs"
+  return 0
+}
+
+stop_app() {
+  local pid
+  if ! pid="$(app_pid)"; then
+    info "Not running."
+    return 0
+  fi
+
+  kill "$pid" 2>/dev/null || true
+  local waited=0
+  while kill -0 "$pid" 2>/dev/null && [ "$waited" -lt 10 ]; do
+    sleep 1; waited=$((waited + 1))
+  done
+  kill -9 "$pid" 2>/dev/null || true
+  rm -f "$PID_FILE"
+  info "Stopped."
+}
+
+case "$ACTION" in
+  status)
+    if pid="$(app_pid)"; then
+      step "Running"
+      info "pid       $pid"
+      info "port      $PORT"
+      info "threads   $(ls "/proc/$pid/task" 2>/dev/null | wc -l)"
+      info "local     http://127.0.0.1:${PORT}/"
+      curl -fsS -o /dev/null --max-time 3 "http://127.0.0.1:${PORT}/" 2>/dev/null \
+        && info "responds  yes" || warn "responds  no — see ./deploy.sh --logs"
+    else
+      step "Not running"
+      info "Start it with: ./deploy.sh --skip-build"
+    fi
+    exit 0 ;;
+  logs)
+    [ -f "$LOG_FILE" ] || die "No log yet at $LOG_FILE"
+    exec tail -n 100 -f "$LOG_FILE" ;;
+  stop)
+    step "Stopping"; stop_app; exit 0 ;;
+  restart)
+    step "Restarting"; stop_app; start_app; exit $? ;;
+esac
 
 # =====================================================================
 # Which domain?
@@ -98,16 +217,19 @@ if [ -n "$DOMAIN" ]; then
 fi
 
 if [ "$DRY_RUN" = true ]; then
-  if [ -n "$DOMAIN" ]; then
-    step "Dry run — PUBLISHED mode"
-    info "Domain       ${DOMAIN}"
+  if [ -n "$DOMAIN" ] && [ "$HAVE_ROOT" = true ]; then
+    step "Dry run — PUBLISHED mode (root available)"
     info "Proxy        ${DOMAIN} -> 127.0.0.1:${PORT} via nginx"
     info "Certificate  certbot --nginx -d ${DOMAIN} --redirect"
     info "Service      ${APP_NAME}.service"
+  elif [ -n "$DOMAIN" ]; then
+    step "Dry run — PUBLISHED mode (no root)"
+    info "Domain       ${DOMAIN}"
+    info "App          runs as $(id -un) on 127.0.0.1:${PORT}"
+    info "Proxy & TLS  configured in your hosting panel — instructions printed"
   else
     step "Dry run — LOCAL mode"
     info "Serve        http://localhost:${PORT}"
-    info "Nothing published, no certificate requested."
   fi
   [ "$SKIP_BUILD" = true ] && info "Build        skipped (--skip-build)"
   exit 0
@@ -124,6 +246,7 @@ command -v npm  >/dev/null || die "npm is not installed."
 [ "$(node -p 'process.versions.node.split(".")[0]')" -ge 18 ] \
   || die "Node 18 or newer is required (found $(node -v))."
 info "Node $(node -v), npm $(npm -v)"
+info "Running as $(id -un)$([ "$HAVE_ROOT" = true ] && echo ' (root available)' || echo ' (no root — unprivileged mode)')"
 
 # =====================================================================
 # Credentials
@@ -224,27 +347,20 @@ fi
 # =====================================================================
 # Building
 #
-# The failure this guards against:
-#
 #   panicked ... The global thread pool has not been initialized.
 #   ... IOError(Os { code: 11, kind: WouldBlock })      <- EAGAIN
-#   Next.js build worker exited with code: null and signal: SIGABRT
 #
 # Next's SWC starts a rayon thread pool sized from the CPU count the OS
-# reports. On shared and managed hosting the visible CPU count belongs to
-# the machine, while the *thread* allowance belongs to your account and is
-# enforced by the kernel (CloudLinux LVE and similar). A box advertising 32
-# CPUs on an account capped at 50 processes will try to start ~32 rayon
-# threads plus V8's pool, libuv's pool and a build worker, and be refused.
+# reports. On shared hosting that count belongs to the machine while the
+# *thread* allowance belongs to your account, enforced by the kernel
+# (CloudLinux LVE and similar) and invisible to `ulimit`, which such hosts
+# leave enormous.
 #
-# `ulimit -u` does not show that cap — it reports the rlimit, which such
-# hosts leave enormous. RAYON_NUM_THREADS does not fix it either, because
-# SWC sizes its own pool from num_cpus rather than reading that variable.
-#
-# What does work is narrowing CPU affinity: num_cpus honours
-# sched_getaffinity, so under `taskset -c 0` the process genuinely sees one
-# CPU and asks for one thread. The attempts below tighten affinity, Next's
-# worker count, V8's pool and libuv's pool together.
+# RAYON_NUM_THREADS does not help: SWC sizes its own pool from num_cpus
+# rather than reading it. Narrowing CPU affinity does, because num_cpus
+# honours sched_getaffinity — under `taskset -c 0` the process genuinely
+# sees one CPU. The attempts below tighten affinity, Next's worker count,
+# V8's pool and libuv's pool together.
 # =====================================================================
 
 show_limits() {
@@ -262,11 +378,10 @@ show_limits() {
   info "cgroup pids    ${pcur} / ${pmax}"
   info "your threads   $(ps -Lu "$(id -u)" --no-headers 2>/dev/null | wc -l) in use"
   info ""
-  info "${D}A Next build needs roughly 120-130 threads at peak, even pinned to"
-  info "one CPU with one worker — that figure is measured, not estimated."
-  info "If your hosting panel caps \"Number of Processes\" below about 150,"
-  info "the build cannot run here and --skip-build is the way. ulimit does"
-  info "not report that cap, so the panel is the number to trust.${X}"
+  info "${D}A build peaks near 120-130 threads even at one CPU and one worker."
+  info "Serving the finished site needs only about a dozen. If your panel"
+  info "caps processes below ~150, use --skip-build with a .next built"
+  info "elsewhere; ulimit does not report that cap.${X}"
 }
 
 # build <description> <cpu-list|-> <workers|->
@@ -286,8 +401,7 @@ build() {
       "NEXT_BUILD_WORKER_THREADS=false"
       "RAYON_NUM_THREADS=${workers}"
       "UV_THREADPOOL_SIZE=${workers}"
-      # --v8-pool-size caps V8's own worker threads, which otherwise scale
-      # with the visible CPU count just as rayon's do.
+      # V8's pool scales with the visible CPU count just as rayon's does.
       "NODE_OPTIONS=--v8-pool-size=${workers} --max-old-space-size=1536"
     )
   fi
@@ -304,7 +418,6 @@ if [ "$SKIP_BUILD" = false ]; then
   show_limits
 
   BUILT=false
-  # description | cpu list | worker count
   ATTEMPTS=(
     "full parallelism|-|-"
     "4 CPUs, 4 workers|0-3|4"
@@ -313,10 +426,7 @@ if [ "$SKIP_BUILD" = false ]; then
 
   for attempt in "${ATTEMPTS[@]}"; do
     IFS='|' read -r a_desc a_cpus a_workers <<< "$attempt"
-    if build "$a_desc" "$a_cpus" "$a_workers"; then
-      BUILT=true
-      break
-    fi
+    if build "$a_desc" "$a_cpus" "$a_workers"; then BUILT=true; break; fi
     warn "Failed. Cleaning up and trying tighter limits."
     rm -rf .next
   done
@@ -324,26 +434,18 @@ if [ "$SKIP_BUILD" = false ]; then
   if [ "$BUILT" = false ]; then
     printf '\n'
     warn "This host cannot build the site, and no setting will change that."
-    warn ""
-    warn "The last attempt was pinned to one CPU with one worker — the least"
-    warn "parallel configuration there is — and still failed. A Next build"
-    warn "needs about 120-130 threads at peak even like that. If your panel"
-    warn "caps processes below roughly 150, the build simply does not fit."
+    warn "The last attempt used one CPU and one worker — the least parallel"
+    warn "configuration there is."
     warn ""
     warn "${B}Build elsewhere and serve the output here.${X} Running the site costs"
-    warn "only a couple of processes, so it is only the build that is a"
-    warn "problem:"
+    warn "about a dozen threads, so only the build is a problem:"
     warn ""
     warn "    # on your laptop, or in CI, in a clone of this repo"
     warn "    npm ci && npm run build"
-    warn "    rsync -az --delete .next/ ${USER}@<server>:${APP_DIR}/.next/"
+    warn "    rsync -az --delete .next/ $(id -un)@<server>:${APP_DIR}/.next/"
     warn ""
     warn "    # back here"
     warn "    ./deploy.sh --skip-build --domain ${DOMAIN:-example.com}"
-    warn ""
-    warn "Or move to a host without a per-account process cap — a small VPS"
-    warn "has none — or ask this one to raise it (CloudLinux calls it LVE"
-    warn "\"NPROC\")."
     die "Build failed."
   fi
 fi
@@ -355,29 +457,114 @@ if [ "$BUILD_ONLY" = true ]; then
 fi
 
 # =====================================================================
-# Local mode
+# Start the site
 # =====================================================================
+
+step "Starting the site"
+stop_app
+start_app || die "The site did not start. See ./deploy.sh --logs"
 
 if [ -z "$DOMAIN" ]; then
-  step "Starting locally"
-  info "Nothing published, no certificate requested."
+  step "Done — local only"
   info "Site:  http://localhost:${PORT}"
   info "Admin: http://localhost:${PORT}/admin"
-  info "Ctrl-C to stop."
-  exec npm start -- --port "$PORT"
+  info ""
+  info "It keeps running in the background. ./deploy.sh --stop to stop it."
+  exit 0
 fi
 
 # =====================================================================
-# Published mode — systemd, nginx, certbot
+# Publishing WITHOUT root — shared hosting
+#
+# nginx, systemd and certbot all need root. On shared hosting the panel
+# already runs a web server and issues certificates, so the job here is to
+# run the app and hand over the two files the panel needs.
 # =====================================================================
 
-step "Publishing on $DOMAIN"
+if [ "$HAVE_ROOT" = false ]; then
+  step "Publishing on ${DOMAIN} (no root — using your hosting panel)"
 
-SUDO=""
-if [ "$(id -u)" -ne 0 ]; then
-  command -v sudo >/dev/null || die "Publishing needs root. Re-run as root, or install sudo."
-  SUDO="sudo"
+  # Passenger, which cPanel's "Setup Node.js App" uses, needs a startup
+  # file. Next has no such entry point of its own, so write one.
+  cat > "$APP_DIR/server.js" <<'SERVER'
+/*
+ * Startup file for cPanel "Setup Node.js App" (Phusion Passenger).
+ *
+ * Passenger requires a plain Node entry point and supplies the port, so
+ * this hands requests to Next's own handler. Not used when the site is
+ * started by deploy.sh directly.
+ */
+const http = require("http");
+const next = require("next");
+
+const port = parseInt(process.env.PORT || "3000", 10);
+const app = next({ dev: false, dir: __dirname });
+const handle = app.getRequestHandler();
+
+app.prepare().then(() => {
+  http.createServer((req, res) => handle(req, res)).listen(port, () => {
+    console.log(`Misty Meadows listening on ${port}`);
+  });
+});
+SERVER
+
+  # And a reverse-proxy snippet for the Apache/LiteSpeed case.
+  cat > "$RUN_DIR/htaccess-snippet.txt" <<HTACCESS
+# Put this in the .htaccess of the document root for ${DOMAIN}
+# (usually ~/public_html or ~/public_html/${DOMAIN}).
+#
+# It forwards every request to the Node process this script started.
+# Requires mod_proxy; if your host disables it, use the panel's
+# "Setup Node.js App" with server.js instead.
+
+RewriteEngine On
+
+# Force HTTPS once the panel has issued a certificate.
+RewriteCond %{HTTPS} !=on
+RewriteRule ^(.*)\$ https://%{HTTP_HOST}/\$1 [R=301,L]
+
+RewriteRule ^(.*)\$ http://127.0.0.1:${PORT}/\$1 [P,L]
+HTACCESS
+
+  info "The site is running as $(id -un) on 127.0.0.1:${PORT}."
+  info ""
+  info "${B}Two files have been written for the panel:${X}"
+  info "  server.js                        startup file for a Node app"
+  info "  .deploy/htaccess-snippet.txt     reverse-proxy rules"
+  info ""
+  info "${B}Point ${DOMAIN} at it — whichever your panel offers:${X}"
+  info ""
+  info "  ${B}A. Setup Node.js App${X} (cPanel / CloudLinux — the reliable one)"
+  info "     Application root      ${APP_DIR}"
+  info "     Application URL       ${DOMAIN}"
+  info "     Application startup   server.js"
+  info "     Node version          $(node -v)"
+  info "     Then press Restart. The panel runs and supervises it, so you"
+  info "     can stop this copy with ./deploy.sh --stop"
+  info ""
+  info "  ${B}B. Reverse proxy${X} — paste .deploy/htaccess-snippet.txt into the"
+  info "     .htaccess of the document root for ${DOMAIN}."
+  info ""
+  info "${B}HTTPS:${X} issue it from the panel — \"SSL/TLS Status\", AutoSSL or"
+  info "\"Let's Encrypt\". certbot cannot run here; it needs root."
+  info ""
+  info "${B}Keeping it alive:${X} option A is supervised by the panel. With"
+  info "option B, re-run ./deploy.sh --skip-build after a reboot, or add a"
+  info "cron entry in the panel:"
+  info "     @reboot cd ${APP_DIR} && ./deploy.sh --skip-build --local"
+  info ""
+  step "Done"
+  info "Local check: curl -I http://127.0.0.1:${PORT}/"
+  info "Status:      ./deploy.sh --status"
+  info "Logs:        ./deploy.sh --logs"
+  exit 0
 fi
+
+# =====================================================================
+# Publishing WITH root — nginx, systemd, certbot
+# =====================================================================
+
+step "Publishing on ${DOMAIN} (root available)"
 
 if [ -z "$EMAIL" ]; then
   if [ -t 0 ]; then
@@ -387,8 +574,7 @@ if [ -z "$EMAIL" ]; then
   [ -n "$EMAIL" ] || die "certbot needs an email address. Pass --email you@example.com"
 fi
 
-# certbot's HTTP challenge cannot succeed until the domain points here, and
-# the error it prints when that is wrong is not obvious.
+# certbot's HTTP challenge cannot succeed until the domain points here.
 if command -v getent >/dev/null; then
   RESOLVED="$(getent ahostsv4 "$DOMAIN" 2>/dev/null | awk 'NR==1 {print $1}' || true)"
   if [ -n "$RESOLVED" ]; then
@@ -402,6 +588,9 @@ if command -v getent >/dev/null; then
     fi
   fi
 fi
+
+# The background copy is replaced by the systemd unit below.
+stop_app
 
 step "Installing nginx and certbot"
 if command -v apt-get >/dev/null; then
@@ -431,7 +620,7 @@ User=${RUN_USER}
 WorkingDirectory=${APP_DIR}
 Environment=NODE_ENV=production
 Environment=PORT=${PORT}
-ExecStart=$(command -v npm) start
+ExecStart=${APP_DIR}/node_modules/.bin/next start -p ${PORT}
 Restart=always
 RestartSec=5
 

@@ -487,8 +487,9 @@ workers → 1 CPU/1 worker) before giving up, and prints the limits it can see.
 
 #### Build elsewhere, serve here
 
-*Running* the site costs only a couple of processes — it is only the build
-that does not fit. So build on any machine that can, and copy the output:
+*Running* the site costs about a dozen threads in one process — it is only
+the build that is heavy. So build on any machine that can, and copy the
+output:
 
 ```bash
 # on your laptop, or in CI, in a clone of this repo
@@ -499,13 +500,59 @@ rsync -az --delete .next/ user@server:/path/to/MistyMeadows/.next/
 ./deploy.sh --skip-build --domain mistymeadowsresorts.com
 ```
 
-`--skip-build` checks that `.next` and `node_modules` are both present and
-then goes straight to nginx, systemd and certbot. `node_modules` can be
-installed on the server as normal — `npm ci` works fine under a low process
-cap; it is only the compile step that does not.
+`npm ci` works fine under a low process cap — it is only the compile step
+that does not.
 
-The alternative is a host without a per-account process cap. Any small VPS
-qualifies, and this site runs comfortably in 1 GB.
+---
+
+## Shared hosting, without root
+
+`deploy.sh` checks for root once and takes the appropriate path, so the same
+command works on a VPS and on shared hosting with no `sudo`, no `su` and no
+package manager.
+
+**With root** it installs nginx, writes a systemd unit and obtains a certbot
+certificate.
+
+**Without root** it runs the site under your own account and writes the two
+files your hosting panel needs:
+
+| File | What it is for |
+| --- | --- |
+| `server.js` | Startup file for cPanel's *Setup Node.js App* (Passenger) |
+| `.deploy/htaccess-snippet.txt` | Reverse-proxy rules, if you use `.htaccess` instead |
+
+Then point the domain at it, whichever your panel offers:
+
+- **Setup Node.js App** — application root is the project directory,
+  startup file `server.js`. The panel runs and supervises the process, so
+  stop this script's copy with `./deploy.sh --stop` afterwards. This is the
+  reliable option.
+- **Reverse proxy** — paste the `.htaccess` snippet into the document root
+  for the domain. Needs `mod_proxy`, which some hosts disable.
+
+**HTTPS comes from the panel** — *SSL/TLS Status*, AutoSSL, or its Let's
+Encrypt button. certbot cannot run without root.
+
+### Running it without systemd
+
+```bash
+./deploy.sh --status     # running? pid, port, thread count, does it answer
+./deploy.sh --logs       # follow the log
+./deploy.sh --restart
+./deploy.sh --stop
+```
+
+The process is detached with `setsid`, so it survives logout, and the pid is
+tracked in `.deploy/app.pid`. To bring it back after a reboot, add a cron
+entry in the panel:
+
+```
+@reboot cd /path/to/MistyMeadows && ./deploy.sh --skip-build --local
+```
+
+If you use *Setup Node.js App*, the panel handles restarts and none of this
+is needed.
 
 ### Credentials
 
