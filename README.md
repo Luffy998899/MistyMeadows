@@ -462,35 +462,50 @@ panicked ... The global thread pool has not been initialized.
 Next.js build worker exited with code: null and signal: SIGABRT
 ```
 
-`code: 11` is `EAGAIN` — the kernel refusing to create a thread. It is not a
-code fault, and it is **not** usually a shortage of CPU or RAM; it happens on
-large hosts too. Next spawns a pool of build workers sized from CPU count and
-free memory, and each worker starts its own rayon thread pool inside SWC, so a
-big machine can ask for well over a thousand threads.
+`code: 11` is `EAGAIN` — the kernel refusing to create a thread. **This is
+almost always a per-account process cap on shared or managed hosting**, not a
+shortage of CPU or memory. It happens on machines advertising 32 cores and
+256 GB of RAM.
 
-Three things cause the refusal, in the order they usually bite:
+Two things make it confusing:
 
-1. **`ulimit -s unlimited`** — every thread reserves `RLIMIT_STACK` of address
-   space, so an unbounded stack makes `pthread_create` fail no matter how much
-   memory the box has. This is the most common one.
-2. **A container pid ceiling** — cgroup `pids.max` far below what `ulimit -u`
-   reports. `ulimit -u` shows the rlimit, not the cgroup controller.
-3. **Too many threads outright** — workers × rayon threads on a many-core host.
+- **`ulimit -u` does not show the cap.** Such hosts leave the rlimit
+  enormous — a million is common — while the real limit is enforced by the
+  kernel (CloudLinux LVE and similar). The figure that matters is
+  **"Number of Processes" in your hosting panel**, often 25–100.
+- **`RAYON_NUM_THREADS` does not help.** Next's SWC sizes its own rayon pool
+  from `num_cpus`, which reports the *machine's* cores, not your allowance.
+  Narrowing CPU affinity does work, because `num_cpus` honours
+  `sched_getaffinity` — hence the `taskset` in `deploy.sh`.
 
-`deploy.sh` prints all of these before building, then retries with a bounded
-stack and a single build worker. To do it by hand:
+**A Next build of this site peaks at roughly 120–130 threads**, measured with
+everything pinned to one CPU and one worker. That is the floor. If the panel
+caps processes below about 150, the build cannot run there at any setting.
+
+`deploy.sh` retries automatically under tightening limits (full → 4 CPUs/4
+workers → 1 CPU/1 worker) before giving up, and prints the limits it can see.
+
+#### Build elsewhere, serve here
+
+*Running* the site costs only a couple of processes — it is only the build
+that does not fit. So build on any machine that can, and copy the output:
 
 ```bash
-ulimit -s 8192
-NEXT_BUILD_CPUS=1 NEXT_BUILD_WORKER_THREADS=false npm run build
+# on your laptop, or in CI, in a clone of this repo
+npm ci && npm run build
+rsync -az --delete .next/ user@server:/path/to/MistyMeadows/.next/
+
+# on the server
+./deploy.sh --skip-build --domain mistymeadowsresorts.com
 ```
 
-`NEXT_BUILD_CPUS` caps Next's worker pool (`experimental.cpus`), which is what
-actually reduces the thread count. `RAYON_NUM_THREADS` alone does not help,
-because each worker is a separate process that builds its own pool.
+`--skip-build` checks that `.next` and `node_modules` are both present and
+then goes straight to nginx, systemd and certbot. `node_modules` can be
+installed on the server as normal — `npm ci` works fine under a low process
+cap; it is only the compile step that does not.
 
-If the container is the constraint, raise its limit instead —
-`docker run --pids-limit=8192`, or `LimitNPROC=` in the systemd unit.
+The alternative is a host without a per-account process cap. Any small VPS
+qualifies, and this site runs comfortably in 1 GB.
 
 ### Credentials
 
