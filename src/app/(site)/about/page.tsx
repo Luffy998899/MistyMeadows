@@ -6,6 +6,7 @@ import { PageHero } from "@/components/PageHero";
 import { SectionHeading } from "@/components/SectionHeading";
 import { Testimonials } from "@/components/Testimonials";
 import { getSettings, getTestimonials } from "@/lib/content";
+import { mapEmbedSrc, mapLinkHref } from "@/lib/maps";
 import { IMAGES } from "@/lib/media-library";
 
 export const metadata: Metadata = {
@@ -77,35 +78,36 @@ export default async function AboutPage() {
             </dl>
 
             <div className="mt-9 flex flex-wrap gap-3">
-              {settings.map_url ? (
-                <a
-                  href={settings.map_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-outline"
-                >
-                  Open in Google Maps
-                </a>
-              ) : null}
+              <a
+                href={mapLinkHref(settings)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-outline"
+              >
+                Open in Google Maps
+              </a>
               <Link href="/contact" className="btn btn-solid">
                 Enquire about a stay
               </Link>
             </div>
           </div>
 
-          {settings.map_embed_url ? (
-            <div className="media-frame aspect-[4/3] w-full">
-              <iframe
-                src={settings.map_embed_url}
-                title="Map showing the location of Misty Meadows Resorts"
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                className="h-full w-full border-0"
-              />
-            </div>
-          ) : (
-            <MediaFrame media={null} ratio="4 / 3" />
-          )}
+          {/*
+            Always renders. mapEmbedSrc validates any configured embed URL
+            and otherwise builds one from the postal address — an unvalidated
+            value that is not an absolute off-site URL resolves against this
+            origin and renders our own 404 page inside the frame.
+          */}
+          <div className="media-frame aspect-[4/3] w-full">
+            <iframe
+              src={mapEmbedSrc(settings)}
+              title={`Map showing the location of ${settings.brand_name}`}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
+              className="h-full w-full border-0"
+            />
+          </div>
         </div>
       </section>
 

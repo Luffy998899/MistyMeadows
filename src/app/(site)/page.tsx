@@ -96,7 +96,7 @@ export default async function HomePage() {
         id="rooms"
         eyebrow="Luxurious"
         title="Rooms & Suites"
-        body="Five ways to stay, and every one of them faces the valley. Balconies wide enough to eat breakfast on, terraces that look straight down the pine slopes, and a premium suite with its own sitting room for a family travelling together."
+        body="Every room faces the valley. Balconies wide enough to eat breakfast on, terraces that look straight down the pine slopes, and a premium suite with its own sitting room for a family travelling together."
         href="/rooms"
         cta="See the rooms"
         media={roomsImage}

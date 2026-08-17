@@ -48,10 +48,12 @@ At [supabase.com](https://supabase.com), create a project, then open
 1. `supabase/migrations/0002_attractions.sql` — the attractions table
 1. `supabase/migrations/0003_facility_photos_offers_videos.sql` — facility
    photographs, offer announcements, and the videos table
-2. `supabase/seed.sql` — the real resort content transcribed from the
+1. `supabase/migrations/0004_room_video_and_gst.sql` — room walkthrough
+   videos, and GST rates on rooms and apartments
+1. `supabase/seed.sql` — the real resort content transcribed from the
    existing website (rooms, apartments, dining rates, testimonials, address)
 
-Both files are safe to re-run: nothing is duplicated, and the seed will
+Every one of these is safe to re-run: nothing is duplicated, and the seed will
 not overwrite anything you have since edited in the admin panel.
 
 ### 2. Configure the app
@@ -381,3 +383,68 @@ deliberately left blank rather than guessed:
 
 The postcode also appears as both 173211 and 173229 across listings, so the
 seeded address omits it — worth confirming and adding under Settings.
+
+---
+
+## Rates and GST
+
+The owner enters the **pre-tax** tariff plus a **GST %**, and the site does the
+arithmetic — `₹4,000` at `12` publishes as `₹4,480`, with `₹4,000 + tax`
+underneath. Leave GST blank and the base rate shows with "+ applicable taxes".
+
+GST is deliberately not pre-filled with 12 or 18: the applicable slab depends
+on the tariff and on current rules, so the rate is the owner's to set.
+`scripts/pricing.test.mts` covers the arithmetic, including lakh-style digit
+grouping (`₹12,50,000`, not `₹1,250,000`).
+
+Run it with:
+
+```bash
+node --experimental-strip-types scripts/pricing.test.mts
+```
+
+---
+
+## The map
+
+The About page map needs no API key and no configuration — it is built from the
+postal address in Settings. The "Google Maps embed URL" field is optional and
+overrides that only when it holds a genuine Google Maps URL; a pasted
+`<iframe>` snippet is unwrapped automatically, and anything else is ignored
+rather than rendered. That last part matters: a relative or same-origin value
+resolves against this site and renders its own 404 page inside the map frame.
+
+---
+
+## Contact details with several values
+
+Phone numbers, email addresses, address lines and notification addresses use a
+repeatable field — one box per value, with add and remove. Pasting
+`88375 84689 / 88726 84689` splits into two entries rather than becoming one
+unusable string. Address lines split only on newlines, since a street address
+legitimately contains commas and slashes.
+
+---
+
+## Deploying
+
+```bash
+./deploy.sh
+```
+
+It asks for a domain. **Leave it blank and the site just runs locally** on
+`http://localhost:3000` — nothing is published and no certificate is requested.
+Give it a domain and it installs nginx, registers a systemd service, and
+obtains a Let's Encrypt certificate through certbot, with automatic renewal and
+an HTTP→HTTPS redirect.
+
+```bash
+./deploy.sh --dry-run                      # report the mode, change nothing
+./deploy.sh --local --port 8080            # local, no prompt
+./deploy.sh --domain example.com --email you@example.com
+./deploy.sh --domain example.com --staging # test certs, avoids rate limits
+```
+
+Point the domain's A record at the server *before* running it with a domain —
+certbot's HTTP challenge cannot succeed otherwise. The script checks DNS and
+warns first. `www` is added to the certificate only when it resolves.

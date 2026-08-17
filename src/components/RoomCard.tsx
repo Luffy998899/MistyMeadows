@@ -1,12 +1,23 @@
 import Link from "next/link";
 
+import { formatRate as formatAmount } from "@/lib/pricing";
 import type { Room } from "@/lib/types";
 
 import { MediaFrame } from "./MediaFrame";
 
+/**
+ * The rate a guest sees, with GST already applied.
+ *
+ * The owner enters the pre-tax tariff and a GST %, so the arithmetic lives
+ * here rather than in their head.
+ */
+export function roomRate(room: Room) {
+  return formatAmount(room.rate_inr, room.gst_percent, room.rate_note ?? "per night");
+}
+
+/** Headline figure only — for the chip laid over the photograph. */
 export function formatRate(room: Room): string {
-  if (!room.rate_inr) return "Rates on request";
-  return `₹${room.rate_inr.toLocaleString("en-IN")}`;
+  return roomRate(room).display;
 }
 
 /**
@@ -117,9 +128,9 @@ export function RoomRow({ room, index }: { room: Room; index: number }) {
         ) : null}
 
         <div className="mt-6 flex flex-wrap items-baseline gap-x-6 gap-y-2">
-          <p className="font-display text-h3 text-wine">{formatRate(room)}</p>
+          <p className="font-display text-h3 text-wine">{roomRate(room).display}</p>
           <p className="text-sm text-stone">
-            {room.rate_inr ? room.rate_note : `Sleeps ${room.max_guests}`}
+            {roomRate(room).note ?? `Sleeps ${room.max_guests}`}
           </p>
         </div>
 
