@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 
 import { MediaFrame } from "@/components/MediaFrame";
 import { PeakGlyph } from "@/components/PeakMark";
-import { formatRate } from "@/components/RoomCard";
+import { RoomVideo } from "@/components/RoomVideo";
+import { roomRate } from "@/components/RoomCard";
 import { getRoom, getRooms } from "@/lib/content";
 
 type Params = { params: Promise<{ slug: string }> };
@@ -27,6 +28,7 @@ export default async function RoomPage({ params }: Params) {
 
   if (!room) notFound();
 
+  const rate = roomRate(room);
   const others = allRooms.filter((r) => r.slug !== room.slug).slice(0, 3);
 
   return (
@@ -51,6 +53,13 @@ export default async function RoomPage({ params }: Params) {
                 />
               </div>
 
+              {room.video ? (
+                <div className="mt-8">
+                  <h2 className="eyebrow mb-3">Walk through the room</h2>
+                  <RoomVideo media={room.video} />
+                </div>
+              ) : null}
+
               {room.description ? (
                 <p className="mt-8 max-w-prose leading-relaxed text-stone">
                   {room.description}
@@ -62,10 +71,10 @@ export default async function RoomPage({ params }: Params) {
             <aside className="lg:sticky lg:top-28 lg:self-start">
               <div className="border-t-2 border-umber pt-6">
                 <p className="font-display text-[2rem] leading-none text-bark">
-                  {formatRate(room)}
+                  {rate.display}
                 </p>
                 <p className="mt-2 text-sm text-stone">
-                  {room.rate_inr ? room.rate_note : "Send us your dates for a quote"}
+                  {rate.note ?? "Send us your dates for a quote"}
                 </p>
 
                 <dl className="mt-7 space-y-3 border-t border-paper-edge pt-6 text-sm">

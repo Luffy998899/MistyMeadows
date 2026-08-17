@@ -1,12 +1,13 @@
 import Link from "next/link";
 
+import { formatRate } from "@/lib/pricing";
 import type { Room } from "@/lib/types";
 
 import { MediaFrame } from "./MediaFrame";
 
-export function formatRate(room: Room): string {
-  if (!room.rate_inr) return "Rates on request";
-  return `₹${room.rate_inr.toLocaleString("en-IN")}`;
+/** Rate for a room, with GST already applied. */
+export function roomRate(room: Room) {
+  return formatRate(room.rate_inr, room.gst_percent, room.rate_note ?? "per night");
 }
 
 /**
@@ -15,6 +16,7 @@ export function formatRate(room: Room): string {
  */
 export function RoomRow({ room, index }: { room: Room; index: number }) {
   const flip = index % 2 === 1;
+  const rate = roomRate(room);
 
   return (
     <article className="grid items-center gap-6 md:grid-cols-2 md:gap-12">
@@ -54,9 +56,9 @@ export function RoomRow({ room, index }: { room: Room; index: number }) {
         ) : null}
 
         <div className="mt-6 flex flex-wrap items-baseline gap-x-6 gap-y-2">
-          <p className="font-display text-h3 text-bark">{formatRate(room)}</p>
+          <p className="font-display text-h3 text-bark">{rate.display}</p>
           <p className="text-sm text-stone">
-            {room.rate_inr ? room.rate_note : `Sleeps ${room.max_guests}`}
+            {rate.note ?? `Sleeps ${room.max_guests}`}
           </p>
         </div>
 

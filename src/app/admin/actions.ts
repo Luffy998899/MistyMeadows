@@ -188,12 +188,23 @@ export async function deleteEnquiry(id: string): Promise<ActionResult> {
 // Settings
 // ---------------------------------------------------------------------
 
-/** Textarea of one-per-line values → a Postgres text[]. */
-function lines(form: FormData, name: string): string[] {
-  return String(form.get(name) ?? "")
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
+/**
+ * Repeated form fields → a Postgres text[].
+ *
+ * `ListField` submits one input per value under the same name, so read them
+ * all. Each value is still split on newlines (and, when `separators` is
+ * given, on commas/semicolons/slashes) so a multi-value paste that slipped
+ * through the client is cleaned up here too. Blanks are dropped, and
+ * duplicates are collapsed.
+ */
+function lines(form: FormData, name: string, separators?: RegExp): string[] {
+  const raw = form.getAll(name).map((value) => String(value));
+
+  const parts = raw.flatMap((value) =>
+    value.split(separators ?? /\n+/).map((piece) => piece.trim()),
+  );
+
+  return [...new Set(parts.filter(Boolean))];
 }
 
 export async function saveSettings(formData: FormData): Promise<ActionResult> {
@@ -218,8 +229,8 @@ export async function saveSettings(formData: FormData): Promise<ActionResult> {
     tagline: String(formData.get("tagline") ?? "").trim(),
     intro: String(formData.get("intro") ?? "").trim(),
     address_lines: lines(formData, "address_lines"),
-    phones: lines(formData, "phones"),
-    emails: lines(formData, "emails"),
+    phones: lines(formData, "phones", /[\n,;/]+/),
+    emails: lines(formData, "emails", /[\n,;\s]+/),
     whatsapp: String(formData.get("whatsapp") ?? "").trim() || null,
     map_url: String(formData.get("map_url") ?? "").trim() || null,
     map_embed_url: String(formData.get("map_embed_url") ?? "").trim() || null,
@@ -260,7 +271,7 @@ export async function saveMailSettings(formData: FormData): Promise<ActionResult
     from_name: String(formData.get("from_name") ?? "").trim() || null,
     from_email: String(formData.get("from_email") ?? "").trim() || null,
     reply_to: String(formData.get("reply_to") ?? "").trim() || null,
-    notify_emails: lines(formData, "notify_emails"),
+    notify_emails: lines(formData, "notify_emails", /[\n,;\s]+/),
   };
 
   // The stored password is never rendered back into the form, so an empty

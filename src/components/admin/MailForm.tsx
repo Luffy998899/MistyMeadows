@@ -4,6 +4,8 @@ import { useActionState, useState, useTransition } from "react";
 
 import { saveMailSettings, testMail, type ActionResult } from "@/app/admin/actions";
 
+import { ListField } from "./ListField";
+
 /**
  * SMTP configuration.
  *
@@ -143,20 +145,15 @@ export function MailForm({
           </div>
 
           <div className="sm:col-span-2">
-            <label htmlFor="notify_emails" className="field-label">
-              Send enquiry notifications to
-            </label>
-            <textarea
-              id="notify_emails"
+            <ListField
               name="notify_emails"
-              rows={3}
-              defaultValue={(settings?.notify_emails ?? []).join("\n")}
+              label="Send enquiry notifications to"
+              type="email"
+              values={settings?.notify_emails ?? []}
               placeholder="info@mistymeadowsresorts.com"
-              className="field resize-y bg-paper"
+              splitPattern={/[\n,;\s]+/}
+              help="Every website enquiry is emailed to each of these."
             />
-            <p className="mt-1.5 text-xs text-stone">
-              One address per line. Every website enquiry is emailed to these.
-            </p>
           </div>
 
           <div className="sm:col-span-2">

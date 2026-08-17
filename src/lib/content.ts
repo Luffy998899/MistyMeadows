@@ -95,7 +95,7 @@ async function listPublished<T>(table: string, select: string, demo: T[]): Promi
 }
 
 export const getRooms = cache(
-  (): Promise<Room[]> => listPublished("rooms", "*, image:image_id(*)", DEMO_ROOMS),
+  (): Promise<Room[]> => listPublished("rooms", "*, image:image_id(*), video:video_id(*)", DEMO_ROOMS),
 );
 
 export const getApartments = cache(
@@ -132,7 +132,7 @@ export const getRoom = cache(async (slug: string): Promise<Room | null> => {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("rooms")
-      .select("*, image:image_id(*)")
+      .select("*, image:image_id(*), video:video_id(*)")
       .eq("slug", slug)
       .eq("published", true)
       .maybeSingle();

@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import { saveSettings, type ActionResult } from "@/app/admin/actions";
 import type { Media, SiteSettings } from "@/lib/types";
 
+import { ListField } from "./ListField";
 import { MediaPicker } from "./MediaPicker";
 
 const SOCIAL_NETWORKS = [
@@ -42,36 +43,6 @@ function Text({
         className="field bg-paper"
       />
       {help ? <p className="mt-1.5 text-xs text-stone">{help}</p> : null}
-    </div>
-  );
-}
-
-function Lines({
-  name,
-  label,
-  values,
-  help,
-  rows = 3,
-}: {
-  name: string;
-  label: string;
-  values: string[];
-  help?: string;
-  rows?: number;
-}) {
-  return (
-    <div>
-      <label htmlFor={name} className="field-label">
-        {label}
-      </label>
-      <textarea
-        id={name}
-        name={name}
-        rows={rows}
-        defaultValue={values.join("\n")}
-        className="field resize-y bg-paper"
-      />
-      <p className="mt-1.5 text-xs text-stone">{help ?? "One per line."}</p>
     </div>
   );
 }
@@ -146,14 +117,29 @@ export function SettingsForm({
       <fieldset>
         <legend className="eyebrow mb-4">Contact</legend>
         <div className="grid gap-5 sm:grid-cols-2">
-          <Lines name="phones" label="Phone numbers" values={settings.phones} />
-          <Lines name="emails" label="Email addresses" values={settings.emails} />
+          <ListField
+            name="phones"
+            label="Phone numbers"
+            type="tel"
+            values={settings.phones}
+            placeholder="+91 88375 84689"
+            splitPattern={/[\n,;/]+/}
+            help="One per box. Pasting “88375 84689 / 88726 84689” splits into two."
+          />
+          <ListField
+            name="emails"
+            label="Email addresses"
+            type="email"
+            values={settings.emails}
+            placeholder="info@mistymeadowsresorts.com"
+            splitPattern={/[\n,;\s]+/}
+          />
           <div className="sm:col-span-2">
-            <Lines
+            <ListField
               name="address_lines"
               label="Address"
               values={settings.address_lines}
-              help="One line per row, as you want it printed."
+              help="One line per box, as you want it printed."
             />
           </div>
           <Text

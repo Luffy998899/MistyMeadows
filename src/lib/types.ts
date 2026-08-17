@@ -21,14 +21,17 @@ export type Room = {
   description: string;
   rate_inr: number | null;
   rate_note: string | null;
+  gst_percent: number | null;
   max_guests: number;
   size_note: string | null;
   features: string[];
   image_id: string | null;
+  video_id: string | null;
   gallery_ids: string[];
   sort_order: number;
   published: boolean;
   image?: Media | null;
+  video?: Media | null;
 };
 
 export type Apartment = {
@@ -37,6 +40,7 @@ export type Apartment = {
   block: string | null;
   detail: string;
   rate_monthly_inr: number | null;
+  gst_percent: number | null;
   image_id: string | null;
   sort_order: number;
   published: boolean;

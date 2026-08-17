@@ -14,7 +14,7 @@ Everything on the public site is stored in the database and edited at
 
 | Screen | Controls |
 | --- | --- |
-| Rooms & suites | Room types, rates, features, photographs |
+| Rooms & suites | Room types, rates, GST %, features, photographs and video |
 | Long-stay apartments | Monthly-let inventory and rates |
 | Facilities & benefits | On-site facilities, and the "booking direct" points |
 | Dining | Thalis, picnic packages, prices |
@@ -41,10 +41,11 @@ At [supabase.com](https://supabase.com), create a project, then open
 
 1. `supabase/migrations/0001_init.sql` — tables, row level security,
    storage bucket
-2. `supabase/seed.sql` — the real resort content transcribed from the
+2. `supabase/migrations/0004_room_video_and_gst.sql` — room videos, GST rates
+3. `supabase/seed.sql` — the real resort content transcribed from the
    existing website (rooms, apartments, dining rates, testimonials, address)
 
-Both files are safe to re-run: nothing is duplicated, and the seed will
+All three are safe to re-run: nothing is duplicated, and the seed will
 not overwrite anything you have since edited in the admin panel.
 
 ### 2. Configure the app
@@ -160,6 +161,7 @@ With a server running on port 3210:
 node scripts/screenshot.mjs /rooms rooms 1440,768,375   # layout at each width
 node scripts/contrast.mjs / /rooms /contact             # WCAG AA contrast
 node scripts/interactions.mjs                           # nav, keyboard, forms
+node --experimental-strip-types scripts/pricing.test.mts  # GST arithmetic
 ```
 
 `screenshot.mjs` writes to `.screenshots/` and reports horizontal overflow,
@@ -168,6 +170,56 @@ against AA — it parses via canvas, so it handles the `oklab()` values Tailwind
 emits for opacity modifiers, which naive hex arithmetic gets wrong. Both
 scroll the page first so lazily revealed sections are actually measured. All
 three exit non-zero on failure.
+
+---
+
+## Rates and GST
+
+The owner enters the **pre-tax** tariff plus a **GST %**, and the site does
+the arithmetic — `₹4,000` at `12` is published as `₹4,480`, with
+`₹4,000 + tax` shown underneath. Leave GST blank and the base rate is shown
+with "+ applicable taxes" instead.
+
+GST is deliberately not pre-filled with 12 or 18: the applicable slab depends
+on the tariff and on current rules, so the rate is the owner's to set.
+`scripts/pricing.test.mts` covers the arithmetic, including lakh-style digit
+grouping (`₹12,50,000`, not `₹1,250,000`).
+
+---
+
+## The map
+
+The About page map needs no API key and no configuration — it is built from
+the postal address in Settings. The "Google Maps embed URL" field is optional
+and only overrides that when it holds a genuine Google Maps URL; a pasted
+`<iframe>` snippet is unwrapped automatically, and anything else is ignored
+rather than rendered. That last part matters: a relative or same-origin value
+resolves against this site and renders its 404 page inside the map frame.
+
+---
+
+## Deploying
+
+```bash
+./deploy.sh
+```
+
+It asks for a domain. **Leave it blank and the site just runs locally** on
+`http://localhost:3000` — nothing is published and no certificate is
+requested. Give it a domain and it installs nginx, registers a systemd
+service, and obtains a Let's Encrypt certificate through certbot with
+automatic renewal and an HTTP→HTTPS redirect.
+
+```bash
+./deploy.sh --dry-run                      # report the mode, change nothing
+./deploy.sh --local --port 8080            # local, no prompt
+./deploy.sh --domain example.com --email you@example.com
+./deploy.sh --domain example.com --staging # test certs, avoids rate limits
+```
+
+Point the domain's A record at the server *before* running it with a domain —
+certbot's HTTP challenge cannot succeed otherwise. The script checks DNS and
+warns you first. `www` is added to the certificate only when it resolves.
 
 ---
 

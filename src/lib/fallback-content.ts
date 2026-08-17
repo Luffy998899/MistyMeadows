@@ -61,14 +61,17 @@ const room = (
   description,
   rate_inr: null,
   rate_note: "per night + applicable taxes",
+  gst_percent: null,
   max_guests,
   size_note: null,
   features,
   image_id: null,
+  video_id: null,
   gallery_ids: [],
   sort_order,
   published: true,
   image: null,
+  video: null,
 });
 
 export const DEMO_ROOMS: Room[] = [
@@ -131,6 +134,7 @@ export const DEMO_APARTMENTS: Apartment[] = [
   block: block as string,
   detail: detail as string,
   rate_monthly_inr: rate as number,
+  gst_percent: null,
   image_id: null,
   sort_order: i + 1,
   published: true,

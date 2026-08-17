@@ -82,9 +82,13 @@ export default async function HomePage() {
         <div className="shell">
           <Reveal className="flex flex-wrap items-end justify-between gap-6">
             <SectionHeading
-              eyebrow="Rooms & suites"
-              title={<span id="rooms-title">Five ways to stay</span>}
-              lead="Every room looks onto the valley. The difference is how much space you have to look from."
+              eyebrow="Accommodation"
+              title={
+                <span id="rooms-title">
+                  Where you&rsquo;ll <span className="signature text-bark">wake up</span>
+                </span>
+              }
+              lead="From a quiet double to a suite with its own terrace — every room opens onto the Kasauli valley."
             />
             <Link href="/rooms" className="btn btn-outline">
               All rooms
