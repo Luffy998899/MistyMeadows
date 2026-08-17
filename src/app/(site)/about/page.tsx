@@ -6,7 +6,7 @@ import { PageHero } from "@/components/PageHero";
 import { SectionHeading } from "@/components/SectionHeading";
 import { Testimonials } from "@/components/Testimonials";
 import { getSettings, getTestimonials } from "@/lib/content";
-import { mapEmbedSrc, mapLinkHref } from "@/lib/maps";
+import { IMAGES } from "@/lib/media-library";
 
 export const metadata: Metadata = {
   title: "About",
@@ -26,9 +26,10 @@ export default async function AboutPage() {
             In the lap of <span className="signature">nature</span>
           </>
         }
+        media={IMAGES.panorama}
       />
 
-      <section className="section pt-0">
+      <section className="section">
         <div className="shell grid gap-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-20">
           <div>
             <p className="text-lead text-stone">{settings.intro}</p>
@@ -49,7 +50,7 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <section id="location" className="section scroll-mt-24 bg-paper-warm">
+      <section id="location" className="section on-cream scroll-mt-24">
         <div className="shell grid gap-12 lg:grid-cols-2 lg:gap-20">
           <div>
             <SectionHeading eyebrow="Location" title="Getting here" />
@@ -76,32 +77,35 @@ export default async function AboutPage() {
             </dl>
 
             <div className="mt-9 flex flex-wrap gap-3">
-              <a
-                href={mapLinkHref(settings)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-outline"
-              >
-                Open in Google Maps
-              </a>
+              {settings.map_url ? (
+                <a
+                  href={settings.map_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-outline"
+                >
+                  Open in Google Maps
+                </a>
+              ) : null}
               <Link href="/contact" className="btn btn-solid">
                 Enquire about a stay
               </Link>
             </div>
           </div>
 
-          {/* Always renders: mapEmbedSrc falls back to the postal address
-              when no valid embed URL has been configured. */}
-          <div className="media-frame aspect-[4/3] w-full">
-            <iframe
-              src={mapEmbedSrc(settings)}
-              title={`Map showing the location of ${settings.brand_name}`}
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              allowFullScreen
-              className="h-full w-full border-0"
-            />
-          </div>
+          {settings.map_embed_url ? (
+            <div className="media-frame aspect-[4/3] w-full">
+              <iframe
+                src={settings.map_embed_url}
+                title="Map showing the location of Misty Meadows Resorts"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                className="h-full w-full border-0"
+              />
+            </div>
+          ) : (
+            <MediaFrame media={null} ratio="4 / 3" />
+          )}
         </div>
       </section>
 

@@ -5,6 +5,7 @@ import { MediaFrame } from "@/components/MediaFrame";
 import { PageHero } from "@/components/PageHero";
 import { SectionHeading } from "@/components/SectionHeading";
 import { getDining } from "@/lib/content";
+import { IMAGES } from "@/lib/media-library";
 
 export const metadata: Metadata = {
   title: "Dining",
@@ -33,9 +34,10 @@ export default async function DiningPage() {
         eyebrow="Dining"
         title="The kitchen"
         lead="A multi-cuisine restaurant on the property, open through the day. The thali is what most guests settle on."
+        media={IMAGES.restaurantHall}
       />
 
-      <section className="section pt-0">
+      <section className="section">
         <div className="shell grid gap-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-16">
           <div className="lg:sticky lg:top-28 lg:self-start">
             <MediaFrame
@@ -48,7 +50,7 @@ export default async function DiningPage() {
 
           <div className="space-y-14">
             {groups.map((group) => (
-              <div key={group.key}>
+              <div key={group.key} id={group.key === "picnic" ? "picnics" : undefined} className="scroll-mt-24">
                 <h2 className="text-h2">{group.heading}</h2>
 
                 <ul className="mt-7 border-t border-paper-edge">
@@ -57,7 +59,7 @@ export default async function DiningPage() {
                       <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
                         <h3 className="font-display text-[1.25rem]">{item.name}</h3>
                         {item.price_note ? (
-                          <p className="whitespace-nowrap text-sm text-bark">
+                          <p className="whitespace-nowrap text-sm text-wine">
                             {item.price_note}
                           </p>
                         ) : null}
@@ -83,7 +85,7 @@ export default async function DiningPage() {
         </div>
       </section>
 
-      <section className="section bg-paper-warm">
+      <section className="section on-cream">
         <div className="shell">
           <SectionHeading
             eyebrow="Groups & events"

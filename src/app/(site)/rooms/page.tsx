@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PageHero } from "@/components/PageHero";
-import { RoomRow } from "@/components/RoomCard";
+import { RoomCard } from "@/components/RoomCard";
 import { SectionHeading } from "@/components/SectionHeading";
 import { getApartments, getRooms } from "@/lib/content";
-import { formatRate } from "@/lib/pricing";
+import { IMAGES } from "@/lib/media-library";
 
 export const metadata: Metadata = {
   title: "Rooms & Suites",
@@ -21,19 +21,30 @@ export default async function RoomsPage() {
       <PageHero
         eyebrow="Accommodation"
         title="Rooms & suites"
-        lead="From a quiet double to a suite with its own terrace. What changes is the floor space, and whether you step out onto a balcony or a terrace."
+        lead="Five room types, all looking onto the valley. What changes between them is floor space and whether you get a balcony or a terrace."
+        media={IMAGES.roomTerrace}
       />
 
-      <section className="section pt-0" aria-label="Room types">
-        <div className="shell space-y-16 md:space-y-24">
-          {rooms.map((room, i) => (
-            <RoomRow key={room.id} room={room} index={i} />
-          ))}
+      <section className="section" aria-label="Room types">
+        <div className="shell">
+          <SectionHeading
+            eyebrow="Accommodation"
+            title="Five ways to stay"
+            lead="Every room looks onto the valley. The difference is how much space you have to look from."
+          />
+
+          <ul className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {rooms.map((room, i) => (
+              <li key={room.id}>
+                <RoomCard room={room} priority={i < 3} />
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
       {apartments.length > 0 ? (
-        <section id="apartments" className="section bg-paper-warm scroll-mt-24">
+        <section id="apartments" className="section on-cream scroll-mt-24">
           <div className="shell">
             <SectionHeading
               eyebrow="Long stays"
@@ -70,26 +81,10 @@ export default async function RoomsPage() {
                       </th>
                       <td className="py-4 pr-4 text-sm text-stone">{apartment.block}</td>
                       <td className="py-4 pr-4 text-sm text-stone">{apartment.detail}</td>
-                      <td className="py-4 text-right">
-                        {(() => {
-                          const rate = formatRate(
-                            apartment.rate_monthly_inr,
-                            apartment.gst_percent,
-                            "per month",
-                          );
-                          return (
-                            <>
-                              <span className="block font-display text-[1.0625rem] text-bark">
-                                {rate.display}
-                              </span>
-                              {rate.note ? (
-                                <span className="mt-0.5 block text-xs text-stone">
-                                  {rate.note}
-                                </span>
-                              ) : null}
-                            </>
-                          );
-                        })()}
+                      <td className="py-4 text-right font-display text-[1.0625rem] text-wine">
+                        {apartment.rate_monthly_inr
+                          ? `₹${apartment.rate_monthly_inr.toLocaleString("en-IN")}`
+                          : "On request"}
                       </td>
                     </tr>
                   ))}
@@ -98,7 +93,7 @@ export default async function RoomsPage() {
             </div>
 
             <p className="mt-6 text-sm text-stone">
-              Where a GST rate has been set, the figure shown already includes it.
+              Rates are exclusive of applicable taxes.
             </p>
 
             <Link href="/contact" className="btn btn-solid mt-8">

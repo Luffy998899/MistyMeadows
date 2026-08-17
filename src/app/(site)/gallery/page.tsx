@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 
 import { EmptyState } from "@/components/EmptyState";
-import { MediaFrame } from "@/components/MediaFrame";
+import { GalleryGrid } from "@/components/GalleryGrid";
 import { PageHero } from "@/components/PageHero";
-import { getGallery } from "@/lib/content";
+import { VideoSection } from "@/components/VideoSection";
+import { getGallery, getVideos } from "@/lib/content";
+import { IMAGES } from "@/lib/media-library";
 
 export const metadata: Metadata = {
   title: "Gallery",
@@ -12,21 +14,21 @@ export const metadata: Metadata = {
 };
 
 export default async function GalleryPage() {
-  const items = await getGallery();
-
-  // Group by the owner-set category so the page has structure rather than
-  // being one long undifferentiated grid.
-  const categories = [...new Set(items.map((item) => item.category))];
+  const [items, videos] = await Promise.all([getGallery(), getVideos()]);
+  const galleryVideos = videos.filter(
+    (v) => v.placement === "gallery" || v.placement === "both",
+  );
 
   return (
     <>
       <PageHero
         eyebrow="Gallery"
-        title="The property, photographed"
-        lead="Rooms, the valley, and the grounds."
+        title="Have a look"
+        lead="Rooms, the valley, the restaurant and the grounds. Tap any photograph to see it full size."
+        media={IMAGES.heroValley}
       />
 
-      <section className="section pt-0">
+      <section className="section">
         <div className="shell">
           {items.length === 0 ? (
             <EmptyState
@@ -34,47 +36,24 @@ export default async function GalleryPage() {
               body="Upload images in the admin panel under Gallery and they will appear here."
             />
           ) : (
-            <div className="space-y-16">
-              {categories.map((category) => {
-                const inCategory = items.filter((item) => item.category === category);
-
-                return (
-                  <section key={category} aria-label={category}>
-                    <h2 className="eyebrow mb-6">{category}</h2>
-
-                    {/*
-                      Every third image runs full width, so the grid has a
-                      rhythm instead of being a uniform tile field.
-                    */}
-                    <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                      {inCategory.map((item, i) => (
-                        <li
-                          key={item.id}
-                          className={i % 5 === 0 ? "sm:col-span-2 lg:col-span-2" : ""}
-                        >
-                          <figure>
-                            <MediaFrame
-                              media={item.media}
-                              ratio={i % 5 === 0 ? "16 / 10" : "4 / 3"}
-                              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                              zoom
-                            />
-                            {item.caption ? (
-                              <figcaption className="mt-2.5 text-sm text-stone">
-                                {item.caption}
-                              </figcaption>
-                            ) : null}
-                          </figure>
-                        </li>
-                      ))}
-                    </ul>
-                  </section>
-                );
-              })}
-            </div>
+            /*
+              The grid, the category filter and the lightbox are one client
+              component: filtering has to reset the open photograph, and
+              splitting them would mean lifting that state into a wrapper for
+              no gain. The page stays a server component and just hands it the
+              rows.
+            */
+            <GalleryGrid items={items} />
           )}
         </div>
       </section>
+
+      <VideoSection
+        videos={galleryVideos}
+        eyebrow="Watch"
+        title="Films of the resort"
+        ground="on-green"
+      />
     </>
   );
 }

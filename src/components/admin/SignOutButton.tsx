@@ -19,7 +19,7 @@ export function SignOutButton() {
         router.refresh();
         router.replace("/admin/login");
       }}
-      className="link-underline text-xs text-bark"
+      className="link-underline text-xs text-wine"
     >
       {busy ? "Signing out…" : "Sign out"}
     </button>

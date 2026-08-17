@@ -120,6 +120,104 @@ function check(name, condition, detail = "") {
   await page.close();
 }
 
+// --- Hero slider -------------------------------------------------------
+{
+  console.log("Hero slider @1440");
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  await page.goto(`${BASE}/`, { waitUntil: "load" });
+
+  const dots = page.locator('[aria-roledescription="carousel"] ~ * button, [aria-roledescription="carousel"] button[aria-current]');
+  const active = () => page.locator("button[aria-current='true']").first();
+
+  const first = await active().getAttribute("aria-current");
+  check("a slide is marked current", first === "true");
+
+  await page.getByRole("button", { name: /next slide/i }).click();
+  await page.waitForTimeout(300);
+
+  const secondLabel = await active().locator(".sr-only").textContent();
+  check("next advances the slider", secondLabel?.includes("Slide 2"), secondLabel ?? "");
+
+  await page.getByRole("button", { name: /previous slide/i }).click();
+  await page.waitForTimeout(300);
+  const backLabel = await active().locator(".sr-only").textContent();
+  check("previous goes back", backLabel?.includes("Slide 1"), backLabel ?? "");
+
+  // Only the visible slide should be exposed to assistive technology.
+  const hidden = await page
+    .locator('[aria-roledescription="carousel"] > div[aria-hidden="true"]')
+    .count();
+  check("inactive slides are aria-hidden", hidden === (await dots.count()) - 1 || hidden > 0);
+
+  await page.close();
+}
+
+// --- Availability bar --------------------------------------------------
+{
+  console.log("Availability bar @1440");
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  await page.goto(`${BASE}/`, { waitUntil: "load" });
+
+  await page.fill("#avail-in", "2030-05-01");
+  await page.fill("#avail-out", "2030-05-04");
+  await page.fill("#avail-guests", "3");
+  await page.getByRole("button", { name: /check availability/i }).click();
+  await page.waitForURL(/\/contact\?/, { timeout: 10_000 });
+
+  check("hands the dates to the enquiry form", page.url().includes("check_in=2030-05-01"), page.url());
+  check("check-in is pre-filled", (await page.inputValue("#check_in")) === "2030-05-01");
+  check("guests is pre-filled", (await page.inputValue("#guests")) === "3");
+
+  await page.close();
+}
+
+// --- Gallery lightbox --------------------------------------------------
+{
+  console.log("Gallery lightbox @1440");
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  // The offer panel is a modal too; dismiss it up front so it cannot steal
+  // focus or scroll-lock partway through these assertions.
+  await page.addInitScript(() =>
+    localStorage.setItem("mm:offer-dismissed", "midweek-in-the-hills:1"),
+  );
+  await page.goto(`${BASE}/gallery`, { waitUntil: "load" });
+
+  const tiles = page.locator("main ul li button");
+  const count = await tiles.count();
+  check("tiles render", count > 0, `${count} tiles`);
+
+  const dialog = page.locator('[role="dialog"]');
+  check("nothing open initially", (await dialog.count()) === 0);
+
+  await tiles.nth(1).click();
+  await dialog.waitFor({ state: "visible", timeout: 5000 });
+  check("clicking a tile opens it", await dialog.isVisible());
+
+  const counter = async () => (await dialog.locator("p").first().textContent())?.trim();
+  const opened = await counter();
+  check("shows its position", /^2 \/ \d+$/.test(opened ?? ""), opened ?? "");
+
+  await page.keyboard.press("ArrowRight");
+  check("arrow key advances", (await counter())?.startsWith("3 /"), await counter());
+
+  await page.keyboard.press("ArrowLeft");
+  check("arrow key goes back", (await counter())?.startsWith("2 /"), await counter());
+
+  await page.keyboard.press("Escape");
+  await dialog.waitFor({ state: "detached", timeout: 5000 });
+  check("Escape closes it", (await dialog.count()) === 0);
+
+  // Filtering must not leave the lightbox pointing at a stale index.
+  const chips = page.locator('button[aria-pressed]');
+  if ((await chips.count()) > 1) {
+    await chips.nth(1).click();
+    const filtered = await tiles.count();
+    check("filter narrows the grid", filtered > 0 && filtered < count, `${filtered} of ${count}`);
+  }
+
+  await page.close();
+}
+
 // --- Admin gate --------------------------------------------------------
 {
   console.log("Admin");

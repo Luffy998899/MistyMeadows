@@ -74,7 +74,7 @@ export function LoginForm() {
       </div>
 
       {error ? (
-        <p role="alert" className="mt-5 border-l-2 border-bark pl-4 text-sm text-bark">
+        <p role="alert" className="mt-5 border-l-2 border-wine pl-4 text-sm text-wine">
           {error}
         </p>
       ) : null}

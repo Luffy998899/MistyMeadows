@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { RESOURCES } from "@/lib/admin/resources";
-import { getMailSettings, isMailConfigured } from "@/lib/mail";
+import { getMailSettings, isMailConfigured, isResendConfigured, mailProvider } from "@/lib/mail";
 import { createClient } from "@/lib/supabase/server";
 import type { Enquiry } from "@/lib/types";
 
@@ -38,26 +38,38 @@ export default async function AdminHome() {
       <h1 className="text-h2">Overview</h1>
 
       {!isMailConfigured(mail) ? (
-        <div className="mt-6 border-l-2 border-bark bg-paper p-5">
+        <div className="mt-6 border-l-2 border-wine bg-paper p-5">
           <h2 className="font-display text-[1.0625rem]">Email notifications are off</h2>
           <p className="mt-1.5 text-sm text-stone">
             Enquiries are still saved and listed here, but nothing is emailed to
-            you yet. Add your SMTP details under{" "}
-            <Link href="/admin/settings#mail" className="link-underline text-bark">
+            you yet.{" "}
+            {isResendConfigured()
+              ? "Resend is connected, but there is no sending address — add one under "
+              : "Add a sending address and either a Resend API key or your SMTP details under "}
+            <Link href="/admin/settings#mail" className="link-underline text-wine">
               Settings → Email
             </Link>
             .
           </p>
         </div>
-      ) : null}
+      ) : (
+        <p className="mt-6 text-sm text-stone">
+          Enquiries are emailed to you via{" "}
+          <span className="font-medium text-ink">
+            {mailProvider(mail) === "resend" ? "Resend" : "SMTP"}
+          </span>
+          , and every one is listed under Enquiries whether or not the email got
+          through.
+        </p>
+      )}
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
         <Link
           href="/admin/enquiries"
-          className="border border-paper-edge bg-paper p-6 transition-colors hover:border-clay"
+          className="border border-paper-edge bg-paper p-6 transition-colors hover:border-gold"
         >
           <p className="eyebrow">Enquiries</p>
-          <p className="mt-3 font-display text-[2.25rem] leading-none text-bark">
+          <p className="mt-3 font-display text-[2.25rem] leading-none text-wine">
             {newCount}
           </p>
           <p className="mt-2 text-sm text-stone">

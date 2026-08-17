@@ -3,9 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { MediaFrame } from "@/components/MediaFrame";
+import { PageHero } from "@/components/PageHero";
 import { PeakGlyph } from "@/components/PeakMark";
-import { RoomVideo } from "@/components/RoomVideo";
-import { roomRate } from "@/components/RoomCard";
+import { formatRate } from "@/components/RoomCard";
 import { getRoom, getRooms } from "@/lib/content";
 
 type Params = { params: Promise<{ slug: string }> };
@@ -28,37 +28,31 @@ export default async function RoomPage({ params }: Params) {
 
   if (!room) notFound();
 
-  const rate = roomRate(room);
   const others = allRooms.filter((r) => r.slug !== room.slug).slice(0, 3);
 
   return (
     <>
-      <article className="pt-[72px] md:pt-20">
-        <div className="shell pt-12 md:pt-16">
+      {/* The room's own photograph carries the banner, as on every other page. */}
+      <PageHero
+        eyebrow="Rooms & suites"
+        title={room.name}
+        lead={room.summary}
+        media={room.image}
+      />
+
+      <article>
+        <div className="shell pt-10 md:pt-14">
           <Link href="/rooms" className="link-underline text-sm text-stone">
             ← All rooms
           </Link>
 
           <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)] lg:gap-16">
             <div>
-              <h1 className="text-h1">{room.name}</h1>
-              <p className="text-lead mt-5 text-stone">{room.summary}</p>
-
-              <div className="mt-8">
-                <MediaFrame
-                  media={room.image}
-                  ratio="3 / 2"
-                  sizes="(max-width: 1024px) 100vw, 60vw"
-                  priority
-                />
-              </div>
-
-              {room.video ? (
-                <div className="mt-8">
-                  <h2 className="eyebrow mb-3">Walk through the room</h2>
-                  <RoomVideo media={room.video} />
-                </div>
-              ) : null}
+              <MediaFrame
+                media={room.image}
+                ratio="3 / 2"
+                sizes="(max-width: 1024px) 100vw, 60vw"
+              />
 
               {room.description ? (
                 <p className="mt-8 max-w-prose leading-relaxed text-stone">
@@ -69,12 +63,12 @@ export default async function RoomPage({ params }: Params) {
 
             {/* Rate + facts rail */}
             <aside className="lg:sticky lg:top-28 lg:self-start">
-              <div className="border-t-2 border-umber pt-6">
-                <p className="font-display text-[2rem] leading-none text-bark">
-                  {rate.display}
+              <div className="border-t-2 border-green-ink pt-6">
+                <p className="font-display text-[2rem] leading-none text-wine">
+                  {formatRate(room)}
                 </p>
                 <p className="mt-2 text-sm text-stone">
-                  {rate.note ?? "Send us your dates for a quote"}
+                  {room.rate_inr ? room.rate_note : "Send us your dates for a quote"}
                 </p>
 
                 <dl className="mt-7 space-y-3 border-t border-paper-edge pt-6 text-sm">
@@ -94,7 +88,7 @@ export default async function RoomPage({ params }: Params) {
                   <ul className="mt-7 space-y-2.5 border-t border-paper-edge pt-6 text-sm">
                     {room.features.map((feature) => (
                       <li key={feature} className="flex items-start gap-3">
-                        <PeakGlyph className="mt-1 h-2.5 w-auto shrink-0 text-clay" />
+                        <PeakGlyph className="mt-1 h-2.5 w-auto shrink-0 text-gold" />
                         {feature}
                       </li>
                     ))}
@@ -130,7 +124,7 @@ export default async function RoomPage({ params }: Params) {
                       sizes="(max-width: 640px) 100vw, 33vw"
                       zoom
                     />
-                    <h3 className="text-h3 mt-4 font-display group-hover:text-bark">
+                    <h3 className="text-h3 mt-4 font-display group-hover:text-wine">
                       {other.name}
                     </h3>
                     <p className="mt-2 text-sm text-stone">{other.summary}</p>

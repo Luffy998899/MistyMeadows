@@ -2,16 +2,21 @@ import { cache } from "react";
 
 import {
   DEMO_APARTMENTS,
+  DEMO_ATTRACTIONS,
   DEMO_DINING,
   DEMO_FACILITIES,
+  DEMO_GALLERY,
+  DEMO_OFFERS,
   DEMO_ROOMS,
   DEMO_SETTINGS,
   DEMO_TESTIMONIALS,
+  DEMO_VIDEOS,
 } from "./fallback-content";
 import { isSupabaseConfigured } from "./supabase/env";
 import { createClient } from "./supabase/server";
 import type {
   Apartment,
+  Attraction,
   DiningItem,
   Facility,
   GalleryItem,
@@ -20,6 +25,7 @@ import type {
   Room,
   SiteSettings,
   Testimonial,
+  Video,
 } from "./types";
 
 /**
@@ -103,8 +109,14 @@ export const getApartments = cache(
     listPublished("apartments", "*, image:image_id(*)", DEMO_APARTMENTS),
 );
 
+export const getAttractions = cache(
+  (): Promise<Attraction[]> =>
+    listPublished("attractions", "*, image:image_id(*)", DEMO_ATTRACTIONS),
+);
+
 export const getFacilities = cache(
-  (): Promise<Facility[]> => listPublished("facilities", "*", DEMO_FACILITIES),
+  (): Promise<Facility[]> =>
+    listPublished("facilities", "*, image:image_id(*)", DEMO_FACILITIES),
 );
 
 export const getDining = cache(
@@ -118,12 +130,38 @@ export const getTestimonials = cache(
 
 export const getGallery = cache(
   (): Promise<GalleryItem[]> =>
-    listPublished("gallery_items", "*, media:media_id(*)", []),
+    listPublished("gallery_items", "*, media:media_id(*)", DEMO_GALLERY),
 );
 
 export const getOffers = cache(
-  (): Promise<Offer[]> => listPublished("offers", "*, image:image_id(*)", []),
+  (): Promise<Offer[]> => listPublished("offers", "*, image:image_id(*)", DEMO_OFFERS),
 );
+
+export const getVideos = cache(
+  (): Promise<Video[]> =>
+    listPublished("videos", "*, media:media_id(*), poster:poster_id(*)", DEMO_VIDEOS),
+);
+
+/**
+ * The offer to announce over the site, if any.
+ *
+ * Validity is filtered here rather than in SQL so it behaves identically
+ * in demo mode, and because "no end date" has to mean "runs until we say
+ * otherwise" rather than "expired".
+ */
+export const getAnnouncedOffer = cache(async (): Promise<Offer | null> => {
+  const offers = await getOffers();
+  const today = new Date().toISOString().slice(0, 10);
+
+  return (
+    offers.find(
+      (offer) =>
+        offer.announce &&
+        (!offer.valid_from || offer.valid_from <= today) &&
+        (!offer.valid_to || offer.valid_to >= today),
+    ) ?? null
+  );
+});
 
 export const getRoom = cache(async (slug: string): Promise<Room | null> => {
   if (isDemoMode()) return DEMO_ROOMS.find((r) => r.slug === slug) ?? null;

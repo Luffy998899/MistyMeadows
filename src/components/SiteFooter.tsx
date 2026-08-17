@@ -1,50 +1,52 @@
 import Link from "next/link";
 
-import { FOOTER_SERVICES, PRIMARY_NAV } from "@/lib/nav";
+import { FOOTER_SERVICES, PRIMARY_NAV, SECONDARY_NAV } from "@/lib/nav";
 import type { SiteSettings } from "@/lib/types";
 
+import { Logo } from "./Logo";
 import { NewsletterForm } from "./NewsletterForm";
-import { PeakMark } from "./PeakMark";
 import { SocialLinks } from "./SocialLinks";
 
+/**
+ * The footer follows the reference's arrangement — the brand lockup in its
+ * own column on the left, "important links" in the middle, and the address
+ * with "follow us on" at the right — over a bottom bar carrying the 24-hour
+ * number and the copyright.
+ *
+ * The reference sets this on a pale sage. Here it is the deep green from the
+ * logo instead, which lets the mark sit in reverse and gives the page a firm
+ * bottom edge; paper text on it clears 11:1.
+ */
 export function SiteFooter({ settings }: { settings: SiteSettings }) {
+  const phone = settings.phones[0];
+
   return (
-    <footer className="on-umber">
+    <footer className="on-green">
       <div className="shell py-16 md:py-20">
-        {/* Signature line — the one place the display face gets to be loud. */}
-        <div className="flex flex-col gap-8 border-b border-paper/15 pb-12 md:flex-row md:items-end md:justify-between">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.8fr)_minmax(0,0.8fr)_minmax(0,1.1fr)] lg:gap-12">
+          {/* Brand */}
           <div>
-            <PeakMark className="h-9 w-auto text-linen" />
-            {/* Script needs room for its ascenders and descenders — a tight
-                leading here clips the tails. */}
-            <p className="signature mt-4 text-[clamp(2.5rem,1.7rem+3.2vw,4.25rem)] leading-[1.3] text-linen">
-              Rest easy in the hills
+            <Logo settings={settings} tone="paper" className="items-start" />
+
+            <p className="mt-6 max-w-xs text-sm leading-relaxed text-paper/70">
+              {settings.tagline}. Pine on three sides, the valley on the fourth.
             </p>
+
+            {Object.values(settings.socials).some(Boolean) || settings.whatsapp ? (
+              <>
+                <h2 className="eyebrow mt-8">Follow us on</h2>
+                <SocialLinks socials={settings.socials} whatsapp={settings.whatsapp} className="mt-3" />
+              </>
+            ) : null}
           </div>
 
-          <div className="w-full max-w-sm">
-            <p className="mb-3 text-sm text-linen">
-              Seasonal offers and news from the resort, a few times a year.
-            </p>
-            <NewsletterForm />
-          </div>
-        </div>
-
-        <div className="grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-4">
-          <div>
-            <h2 className="eyebrow mb-4">The resort</h2>
-            <p className="max-w-xs text-sm leading-relaxed text-paper/70">
-              {settings.intro.split(". ").slice(0, 2).join(". ")}.
-            </p>
-            <SocialLinks socials={settings.socials} className="mt-6" />
-          </div>
-
+          {/* Links — two columns of their own, not one stacked list */}
           <nav aria-labelledby="footer-explore">
             <h2 id="footer-explore" className="eyebrow mb-4">
-              Explore
+              Important links
             </h2>
-            <ul className="space-y-2.5">
-              {PRIMARY_NAV.map((item) => (
+            <ul className="space-y-2">
+              {[...PRIMARY_NAV.slice(1), ...SECONDARY_NAV].map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}
@@ -61,7 +63,7 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
             <h2 id="footer-services" className="eyebrow mb-4">
               At the resort
             </h2>
-            <ul className="space-y-2.5">
+            <ul className="space-y-2">
               {FOOTER_SERVICES.map((item) => (
                 <li key={item.label}>
                   <Link
@@ -75,8 +77,9 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
             </ul>
           </nav>
 
+          {/* Location & newsletter */}
           <div>
-            <h2 className="eyebrow mb-4">Find us</h2>
+            <h2 className="eyebrow mb-4">Our location</h2>
             <address className="space-y-4 text-sm not-italic text-paper/75">
               <p className="leading-relaxed">
                 {settings.address_lines.map((line) => (
@@ -88,13 +91,13 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
 
               {settings.phones.length > 0 ? (
                 <p>
-                  {settings.phones.map((phone) => (
+                  {settings.phones.map((p) => (
                     <a
-                      key={phone}
-                      href={`tel:${phone.replace(/\s/g, "")}`}
+                      key={p}
+                      href={`tel:${p.replace(/\s/g, "")}`}
                       className="link-underline block hover:text-paper"
                     >
-                      {phone}
+                      {p}
                     </a>
                   ))}
                 </p>
@@ -116,16 +119,37 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
                 href={settings.map_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="link-underline mt-4 inline-block text-sm text-linen"
+                className="link-underline mt-4 inline-block text-sm text-gold-light"
               >
                 Open in Google Maps
               </a>
             ) : null}
+
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 border-t border-paper/15 pt-8 text-xs text-paper/70 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-12 flex flex-col gap-4 border-t border-paper/15 pt-8 md:flex-row md:items-center md:justify-between">
+          <p className="max-w-sm text-sm text-paper/70">
+            Seasonal offers and news from the resort, a few times a year.
+          </p>
+          <div className="w-full max-w-md">
+            <NewsletterForm />
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom bar — the reference's 24x7 line, kept. */}
+      <div className="border-t border-paper/15">
+        <div className="shell flex flex-col items-center gap-3 py-6 text-center text-xs text-paper/70 sm:flex-row sm:justify-between sm:text-left">
           <p>{settings.copyright_text}</p>
+          {phone ? (
+            <p>
+              Reservations 24×7 ·{" "}
+              <a href={`tel:${phone.replace(/\s/g, "")}`} className="link-underline text-gold-light">
+                {phone}
+              </a>
+            </p>
+          ) : null}
           <p>{settings.legal_name}</p>
         </div>
       </div>

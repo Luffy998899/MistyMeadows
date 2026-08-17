@@ -24,7 +24,7 @@ export default async function PostPage({ params }: Params) {
   const date = post.event_date ?? post.published_at;
 
   return (
-    <article className="pt-[72px] md:pt-20">
+    <article>
       <div className="shell pb-16 pt-12 md:pt-16">
         <Link href="/journal" className="link-underline text-sm text-stone">
           ← News &amp; events

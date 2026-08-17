@@ -181,7 +181,7 @@ export function ResourceForm({
       </div>
 
       {state?.error ? (
-        <p role="alert" className="mt-6 border-l-2 border-bark bg-paper p-4 text-sm text-bark">
+        <p role="alert" className="mt-6 border-l-2 border-wine bg-paper p-4 text-sm text-wine">
           {state.error}
         </p>
       ) : null}

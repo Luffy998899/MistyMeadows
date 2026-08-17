@@ -47,6 +47,25 @@ export type Apartment = {
   image?: Media | null;
 };
 
+export type Attraction = {
+  id: string;
+  slug: string;
+  name: string;
+  category: string;
+  /** Free text — "About 5 km · 15 min" — because road distance and drive
+   *  time vary by route and season, and the owner is the one who knows. */
+  distance_note: string;
+  summary: string;
+  description: string;
+  visit_note: string | null;
+  highlights: string[];
+  map_url: string | null;
+  image_id: string | null;
+  sort_order: number;
+  published: boolean;
+  image?: Media | null;
+};
+
 export type FacilityCategory = "facility" | "booking_benefit";
 
 export type Facility = {
@@ -55,8 +74,10 @@ export type Facility = {
   name: string;
   description: string;
   icon: string;
+  image_id: string | null;
   sort_order: number;
   published: boolean;
+  image?: Media | null;
 };
 
 export type DiningItem = {
@@ -103,9 +124,31 @@ export type Offer = {
   valid_from: string | null;
   valid_to: string | null;
   image_id: string | null;
+  /** Show this one in the announcement panel over the site. */
+  announce: boolean;
+  /** Bump to bring the panel back for guests who already dismissed it. */
+  announce_version: number;
   sort_order: number;
   published: boolean;
   image?: Media | null;
+};
+
+export type VideoPlacement = "home" | "gallery" | "both";
+
+export type Video = {
+  id: string;
+  title: string;
+  description: string;
+  placement: VideoPlacement;
+  /** An uploaded file… */
+  media_id: string | null;
+  /** …or a YouTube / Vimeo link. One of the two is always set. */
+  embed_url: string | null;
+  poster_id: string | null;
+  sort_order: number;
+  published: boolean;
+  media?: Media | null;
+  poster?: Media | null;
 };
 
 export type Post = {

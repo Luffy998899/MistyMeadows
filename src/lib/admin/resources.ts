@@ -43,6 +43,12 @@ export type Resource = {
   /** Public URL pattern for a "view on site" link, `:slug` interpolated. */
   publicPath?: string;
   blurb?: string;
+  /**
+   * Show the bulk uploader on this resource's list screen. Set to the table
+   * each uploaded file should also be inserted into, or `true` to upload to
+   * the media library only.
+   */
+  bulkUpload?: "gallery_items" | true;
 };
 
 const PUBLISHED: Field = {
@@ -193,6 +199,12 @@ export const RESOURCES: Resource[] = [
       },
       { name: "name", label: "Name", type: "text", required: true },
       { name: "description", label: "Description", type: "textarea", rows: 2 },
+      {
+        name: "image_id",
+        label: "Photograph",
+        type: "media",
+        help: "Optional. On-site facilities show it on the home page and the facilities page; booking-direct benefits are icon-only and ignore it.",
+      },
       { name: "icon", label: "Icon", type: "select", options: ICON_OPTIONS },
       SORT,
       PUBLISHED,
@@ -257,11 +269,130 @@ export const RESOURCES: Resource[] = [
     ],
   },
   {
+    key: "attractions",
+    table: "attractions",
+    label: "Attractions",
+    singular: "Attraction",
+    titleField: "name",
+    blurb:
+      "Places to visit near the resort, shown on /attractions in this order. " +
+      "Upload a photograph for each one — until you do, the page draws a " +
+      "labelled placeholder in its place.",
+    listFields: [
+      { name: "category", label: "Type" },
+      { name: "distance_note", label: "Distance" },
+    ],
+    fields: [
+      { name: "name", label: "Place", type: "text", required: true },
+      {
+        name: "slug",
+        label: "Web address",
+        type: "slug",
+        from: "name",
+        help: "Used for the link that jumps to this place on the page.",
+      },
+      {
+        name: "image_id",
+        label: "Photograph",
+        type: "media",
+        help: "Upload your own photograph of the place. None are supplied — these are public landmarks, not the resort.",
+      },
+      {
+        name: "category",
+        label: "Type",
+        type: "text",
+        help: "Shown above the name, e.g. Temples, Colonial history, Walks & treks.",
+      },
+      {
+        name: "distance_note",
+        label: "Distance",
+        type: "text",
+        help: "Free text, e.g. “From Solan · 11 km (30 min drive)”. Correct these whenever you like.",
+      },
+      {
+        name: "summary",
+        label: "One-line summary",
+        type: "textarea",
+        rows: 2,
+        help: "Used in listings and search results.",
+      },
+      { name: "description", label: "Description", type: "textarea", rows: 6 },
+      {
+        name: "highlights",
+        label: "Highlights",
+        type: "tags",
+        help: "One per line — e.g. Christ Church, The Mall, Monkey Point.",
+      },
+      {
+        name: "visit_note",
+        label: "Before you go",
+        type: "textarea",
+        rows: 3,
+        help: "Opening hours, entry rules, anything a guest should know first.",
+      },
+      { name: "map_url", label: "Map link", type: "text" },
+      SORT,
+      PUBLISHED,
+    ],
+  },
+  {
+    key: "videos",
+    table: "videos",
+    label: "Videos",
+    singular: "Video",
+    titleField: "title",
+    blurb:
+      "Films of the resort. Either upload a file or paste a YouTube or Vimeo link — " +
+      "one of the two is required. Choose where each one plays.",
+    listFields: [{ name: "placement", label: "Shown on" }],
+    fields: [
+      { name: "title", label: "Title", type: "text", required: true },
+      {
+        name: "description",
+        label: "Short description",
+        type: "textarea",
+        rows: 2,
+      },
+      {
+        name: "placement",
+        label: "Shown on",
+        type: "select",
+        required: true,
+        options: [
+          { value: "home", label: "The home page" },
+          { value: "gallery", label: "The gallery page" },
+          { value: "both", label: "Both" },
+        ],
+      },
+      {
+        name: "media_id",
+        label: "Upload a video file",
+        type: "media",
+        help: "MP4 or WebM. Leave blank if you are using a YouTube or Vimeo link instead.",
+      },
+      {
+        name: "embed_url",
+        label: "…or a YouTube / Vimeo link",
+        type: "text",
+        help: "Paste the normal watch or share link — youtube.com/watch?v=…, youtu.be/…, or vimeo.com/…",
+      },
+      {
+        name: "poster_id",
+        label: "Cover image",
+        type: "media",
+        help: "The still shown before the video plays. Worth setting for uploads: the first frame is usually dark.",
+      },
+      SORT,
+      PUBLISHED,
+    ],
+  },
+  {
     key: "gallery",
     table: "gallery_items",
     label: "Gallery",
     singular: "Gallery image",
     titleField: "caption",
+    bulkUpload: "gallery_items",
     blurb: "Photographs on the gallery page, grouped by category.",
     listFields: [{ name: "category", label: "Category" }],
     fields: [
@@ -294,6 +425,19 @@ export const RESOURCES: Resource[] = [
       { name: "terms", label: "Terms & conditions", type: "textarea", rows: 3 },
       { name: "valid_from", label: "Valid from", type: "date" },
       { name: "valid_to", label: "Valid until", type: "date" },
+      {
+        name: "announce",
+        label: "Announce this offer over the site",
+        type: "boolean",
+        help: "Opens in a panel a moment after the page loads. Guests can close it, and it stays closed for them. Only the first announced offer that is currently valid is shown.",
+      },
+      {
+        name: "announce_version",
+        label: "Announcement version",
+        type: "number",
+        min: 1,
+        help: "Add one to this after changing the wording, to show the panel again to guests who already closed it.",
+      },
       SORT,
       PUBLISHED,
     ],

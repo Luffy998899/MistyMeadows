@@ -3,54 +3,63 @@
 /*
   Misty Meadows Resorts — design tokens.
 
-  Palette is pulled from the company logo: the three nested peaks are forest
-  green, the wordmark is a deep bark. Everything else is a warm paper
-  neutral so the (owner-uploaded) photography carries the colour.
-*/
-/*
-  Palette.
+  The layout follows the Hotel Grand Paragon reference: a centred logo with
+  the navigation split either side of it, a full-bleed hero slider with an
+  availability bar laid over its lower edge, then alternating image/text
+  bands separated by tinted grounds, a full-bleed celebrations plate, a
+  split facilities panel, an amenities grid, a 24x7 call band, a newsletter
+  strip and a pale footer.
 
-  The five supplied swatches are used verbatim:
-    #3E362E umber · #865D36 bark · #93785B clay · #AC8968 tan · #A69080 greige
-
-  Three tones are derived from them because the supplied set has no light
-  ground and no tone dark enough for small text on the mid browns — every
-  pairing below is checked against WCAG AA (4.5:1 body, 3:1 large/UI):
-
-    paper       lightest tint, so body copy clears 4.5:1
-    umber-deep  one step under #3E362E, for text on the tan ground
-    stone       #93785B darkened; the swatch itself is only 3.6:1 on paper
+  The colour, however, is Misty Meadows' own. The reference leans on blush
+  pink and mint over gold; here the same three-part structure is rebuilt out
+  of the company logo — forest green peaks, a deep wine wordmark — so the
+  page reads as this resort rather than a recolour of somebody else's.
 */
 @theme {
-  --color-paper: #f4ede4;
-  /* Light enough that #865D36 emphasis still clears 4.5:1 on it (4.69),
-     which the darker tone this replaced did not (4.44). */
-  --color-paper-warm: #f0e7dc;
-  --color-paper-edge: #cbb6a0;
+  /* ---- Brand, taken from the logo ---------------------------------- */
+  --color-green: #0e7a46;      /* the three peaks */
+  --color-green-deep: #0a5734; /* headings on tinted grounds */
+  --color-green-ink: #08402a;  /* footer and dark plates */
+  --color-wine: #7b1b36;       /* the wordmark — primary action colour */
+  --color-wine-deep: #5c1428;
+  --color-gold: #b08a4a;       /* ornament rules, the "book" button */
+  /* Small caps at 11px need 4.5:1. #8e6c32 only reached 4.2:1 on cream, so
+     the text tone is a step darker than the ornament tone. */
+  --color-gold-deep: #7a5c29;
+  /* ...and a step lighter for the same type on the green grounds, where the
+     mid gold lands at 3.7:1. */
+  --color-gold-light: #d6b678;
 
-  --color-ink: #3e362e;        /* supplied */
-  --color-umber: #3e362e;      /* supplied — dark section ground */
-  --color-umber-deep: #2b241e; /* derived — text on tan, deepest ground */
-  --color-bark: #865d36;       /* supplied — emphasis, prices, links */
-  --color-clay: #93785b;       /* supplied — rules and icons */
-  --color-tan: #ac8968;        /* supplied — section ground */
-  --color-greige: #a69080;     /* supplied */
-  --color-almond: #c4ae97;     /* derived — lighter section ground */
-  --color-linen: #d8c6b0;      /* derived — light tone on dark grounds */
-  --color-stone: #6b5a47;      /* derived — muted body copy */
+  /* ---- Grounds ------------------------------------------------------ */
+  /* Each is the brand equivalent of one of the reference's tints:
+     blush ← its pink welcome band, mint ← its sage quote band and footer,
+     cream ← its amenities and call bands. */
+  --color-paper: #fdfbf7;
+  --color-cream: #f8f1e6;
+  --color-blush: #fbf1f2;
+  --color-mint: #e7f1ea;
+  --color-paper-edge: #e2d8c9;
+  --color-paper-warm: #f4ece0;
 
-  --font-display: var(--font-fraunces), "Iowan Old Style", Georgia, serif;
+  /* ---- Type --------------------------------------------------------- */
+  --color-ink: #2a2422;
+  --color-stone: #6a5f58;  /* muted body copy — 6.0:1 on paper */
+  --color-linen: #d9e6dd;  /* light tone on the green grounds */
+
+  --font-display: var(--font-cormorant), "Iowan Old Style", Georgia, serif;
   --font-body: var(--font-inter-tight), "Helvetica Neue", Arial, sans-serif;
   --font-script: var(--font-parisienne), "Snell Roundhand", cursive;
 
-  /* Type scale — fluid, but with hard floors and ceilings so nothing
-     degenerates at 375px or runs away on an ultrawide. */
+  /* Fluid scale with hard floors and ceilings, so nothing degenerates at
+     375px or runs away on an ultrawide. Cormorant sits small on its em box,
+     so every step is a shade larger than the equivalent in a Fraunces or
+     Playfair scale. */
   --text-eyebrow: 0.6875rem;
-  --text-display: clamp(2.75rem, 1.6rem + 4.9vw, 6.5rem);
-  --text-h1: clamp(2.25rem, 1.5rem + 3.2vw, 4.25rem);
-  --text-h2: clamp(1.75rem, 1.3rem + 1.9vw, 2.875rem);
-  --text-h3: clamp(1.25rem, 1.08rem + 0.7vw, 1.625rem);
-  --text-lead: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem);
+  --text-display: clamp(2.75rem, 1.5rem + 5.2vw, 6rem);
+  --text-h1: clamp(2.375rem, 1.6rem + 3.3vw, 4.25rem);
+  --text-h2: clamp(2rem, 1.45rem + 2.3vw, 3.25rem);
+  --text-h3: clamp(1.3rem, 1.1rem + 0.8vw, 1.75rem);
+  --text-lead: clamp(1.0625rem, 1rem + 0.3vw, 1.1875rem);
 
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -70,7 +79,7 @@
     color: var(--color-ink);
     font-family: var(--font-body);
     font-size: 1rem;
-    line-height: 1.65;
+    line-height: 1.7;
     -webkit-font-smoothing: antialiased;
     /* Belt-and-braces against a stray wide child causing a sideways scroll. */
     overflow-x: clip;
@@ -79,8 +88,10 @@
   h1, h2, h3, h4 {
     font-family: var(--font-display);
     font-weight: 400;
-    line-height: 1.05;
-    letter-spacing: -0.02em;
+    line-height: 1.1;
+    /* Garamond wants a touch of air, not the negative tracking a grotesque
+       display face needs. */
+    letter-spacing: 0.002em;
     text-wrap: balance;
   }
 
@@ -93,59 +104,30 @@
     height: auto;
   }
 
-  /* One focus treatment, applied everywhere, visible on both paper and umber. */
+  /* One focus treatment, applied everywhere, legible on every ground. */
   :where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
-    outline: 2px solid var(--color-bark);
+    outline: 2px solid var(--color-wine);
     outline-offset: 3px;
     border-radius: 2px;
   }
 
-  .on-umber :where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
-    outline-color: var(--color-linen);
+  .on-green :where(a, button, input, textarea, select, summary, [tabindex]):focus-visible,
+  .on-photo :where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
+    outline-color: var(--color-paper);
   }
 
   ::selection {
-    background: var(--color-linen);
-    color: var(--color-umber-deep);
+    background: var(--color-mint);
+    color: var(--color-green-ink);
   }
 }
 
 @layer components {
-  /* ---- Structural devices -------------------------------------------- */
-
-  .eyebrow {
-    font-family: var(--font-body);
-    font-size: var(--text-eyebrow);
-    font-weight: 500;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--color-stone);
-  }
-
-  .on-umber .eyebrow {
-    color: var(--color-linen);
-  }
-
-  /* The signature: a rule interrupted by the logo's three-peak silhouette.
-     Used to open sections instead of a generic centred underline. */
-  .peak-rule {
-    display: flex;
-    align-items: center;
-    gap: 0.875rem;
-    color: var(--color-green);
-  }
-
-  .peak-rule::after {
-    content: "";
-    flex: 1;
-    height: 1px;
-    background: currentColor;
-    opacity: 0.28;
-  }
+  /* ---- Structure ------------------------------------------------------ */
 
   .shell {
     width: 100%;
-    max-width: 84rem;
+    max-width: 82rem;
     margin-inline: auto;
     padding-inline: 1.25rem;
   }
@@ -155,11 +137,76 @@
   }
 
   @media (min-width: 1280px) {
-    .shell { padding-inline: 4rem; }
+    .shell { padding-inline: 3.5rem; }
   }
 
   .section {
-    padding-block: clamp(3.5rem, 2rem + 6vw, 8rem);
+    padding-block: clamp(3.5rem, 2rem + 5.5vw, 7rem);
+  }
+
+  .section-tight {
+    padding-block: clamp(2.75rem, 1.75rem + 3.5vw, 4.5rem);
+  }
+
+  /*
+    The eyebrow + ornament pairing that opens every band. The reference uses
+    a florid vector flourish; the brand equivalent is a gold hairline broken
+    by the logo's peak silhouette, which is already the site's structural
+    glyph.
+  */
+  .eyebrow {
+    font-family: var(--font-body);
+    font-size: var(--text-eyebrow);
+    font-weight: 500;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--color-gold-deep);
+  }
+
+  .on-green .eyebrow {
+    color: var(--color-gold-light);
+  }
+
+  /* Over a photograph the gold is too close to the sunlit parts of the
+     picture to read, so the eyebrow goes to paper with a soft shadow. */
+  .on-photo .eyebrow {
+    color: var(--color-paper);
+    text-shadow: 0 1px 10px rgb(8 64 42 / 0.65);
+  }
+
+  .ornament {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--color-gold);
+  }
+
+  .ornament::before,
+  .ornament::after {
+    content: "";
+    height: 1px;
+    width: clamp(2rem, 6vw, 3.5rem);
+    background: linear-gradient(to right, transparent, currentColor);
+  }
+
+  .ornament::after {
+    background: linear-gradient(to left, transparent, currentColor);
+  }
+
+  /* Edge-aligned variants: one rule only, running away from the glyph. */
+  .ornament-start::before { display: none; }
+  .ornament-start::after {
+    flex: 1;
+    width: auto;
+    background: linear-gradient(to right, currentColor, transparent);
+  }
+
+  .ornament-end { flex-direction: row-reverse; }
+  .ornament-end::before { display: none; }
+  .ornament-end::after {
+    flex: 1;
+    width: auto;
+    background: linear-gradient(to left, currentColor, transparent);
   }
 
   /* ---- Links & buttons ------------------------------------------------ */
@@ -182,10 +229,10 @@
     justify-content: center;
     gap: 0.6rem;
     min-height: 44px;
-    padding: 0.75rem 1.75rem;
-    font-size: 0.8125rem;
+    padding: 0.75rem 1.9rem;
+    font-size: 0.75rem;
     font-weight: 500;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
     border: 1px solid transparent;
     cursor: pointer;
@@ -194,33 +241,47 @@
                 border-color 0.35s var(--ease-out-soft);
   }
 
+  /* Primary. Wine rather than the reference's gold: the same weight in the
+     composition, but it clears 8.8:1 against paper where gold-on-white does
+     not reach 3:1. */
   .btn-solid {
-    background: var(--color-umber);
+    background: var(--color-wine);
     color: var(--color-paper);
   }
 
-  .btn-solid:hover { background: var(--color-green); }
+  .btn-solid:hover { background: var(--color-wine-deep); }
+
+  /* The "book now" chip in the header — the reference's amber button, with
+     ink on it so the label is actually readable (4.8:1). */
+  .btn-gold {
+    background: var(--color-gold);
+    color: #2a2018;
+  }
+
+  .btn-gold:hover { background: var(--color-gold-deep); color: var(--color-paper); }
 
   .btn-outline {
-    border-color: color-mix(in srgb, var(--color-ink) 28%, transparent);
+    border-color: color-mix(in srgb, var(--color-ink) 25%, transparent);
     color: var(--color-ink);
   }
 
   .btn-outline:hover {
-    background: var(--color-umber);
-    border-color: var(--color-umber);
+    background: var(--color-green-ink);
+    border-color: var(--color-green-ink);
     color: var(--color-paper);
   }
 
-  .on-umber .btn-outline {
-    border-color: color-mix(in srgb, var(--color-paper) 38%, transparent);
+  .on-green .btn-outline,
+  .on-photo .btn-outline {
+    border-color: color-mix(in srgb, var(--color-paper) 45%, transparent);
     color: var(--color-paper);
   }
 
-  .on-umber .btn-outline:hover {
+  .on-green .btn-outline:hover,
+  .on-photo .btn-outline:hover {
     background: var(--color-paper);
     border-color: var(--color-paper);
-    color: var(--color-umber);
+    color: var(--color-green-ink);
   }
 
   /* ---- Forms ---------------------------------------------------------- */
@@ -238,13 +299,14 @@
   }
 
   .field::placeholder { color: color-mix(in srgb, var(--color-stone) 70%, transparent); }
-  .field:hover { border-color: color-mix(in srgb, var(--color-green) 45%, transparent); }
+  .field:hover, .field:focus { border-color: color-mix(in srgb, var(--color-green) 55%, transparent); }
 
   .field-label {
     display: block;
     margin-bottom: 0.4rem;
-    font-size: 0.75rem;
-    letter-spacing: 0.12em;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--color-stone);
   }
@@ -264,15 +326,59 @@
     transition: transform 1.2s var(--ease-out-soft);
   }
 
-  .media-zoom:hover img { transform: scale(1.045); }
+  .media-zoom:hover img { transform: scale(1.05); }
+
+  /*
+    The reference frames its welcome photograph in a cusped Mughal arch. The
+    shape is rebuilt here from a radial mask rather than an image, so it
+    scales and recolours: a tall ogee top on a square base, with a gold
+    double rule set just outside it.
+  */
+  .arch-frame {
+    position: relative;
+    border-radius: 50% 50% 6px 6px / 34% 34% 3% 3%;
+    overflow: hidden;
+  }
+
+  .arch-outline {
+    position: relative;
+    padding: 0.6rem;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 55%, transparent);
+    border-radius: 50% 50% 8px 8px / 33% 33% 3% 3%;
+  }
+
+  .arch-outline::before {
+    content: "";
+    position: absolute;
+    inset: 0.28rem;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 30%, transparent);
+    border-radius: 50% 50% 7px 7px / 33% 33% 3% 3%;
+    pointer-events: none;
+  }
+
+  /* ---- Cards ---------------------------------------------------------- */
+
+  .card {
+    background: var(--color-paper);
+    border: 1px solid var(--color-paper-edge);
+    transition: border-color 0.4s var(--ease-out-soft),
+                box-shadow 0.4s var(--ease-out-soft),
+                transform 0.4s var(--ease-out-soft);
+  }
+
+  .card:hover {
+    border-color: color-mix(in srgb, var(--color-gold) 60%, transparent);
+    box-shadow: 0 22px 48px -32px rgb(8 64 42 / 0.45);
+    transform: translateY(-3px);
+  }
 }
 
 @layer utilities {
   .text-display { font-size: var(--text-display); }
   .text-h1 { font-size: var(--text-h1); }
   .text-h2 { font-size: var(--text-h2); }
-  .text-h3 { font-size: var(--text-h3); line-height: 1.2; }
-  .text-lead { font-size: var(--text-lead); line-height: 1.6; }
+  .text-h3 { font-size: var(--text-h3); line-height: 1.25; }
+  .text-lead { font-size: var(--text-lead); line-height: 1.75; }
 
   .font-display { font-family: var(--font-display); }
   .font-body { font-family: var(--font-body); }
@@ -281,62 +387,48 @@
     The script. Used only on standalone signature lines and as a single
     accent word inside a display heading — never for anything a reader has
     to work through. Parisienne sits small on its em box, so it needs
-    ~1.35x and a baseline nudge to sit optically level with Fraunces.
+    ~1.3x and a baseline nudge to sit optically level with Cormorant.
   */
   .signature {
     font-family: var(--font-script);
     font-weight: 400;
-    font-size: 1.35em;
-    line-height: 0.85;
+    font-size: 1.3em;
+    line-height: 0.9;
     letter-spacing: 0.01em;
     display: inline-block;
     vertical-align: baseline;
-    transform: translateY(0.06em);
+    transform: translateY(0.05em);
   }
 
-  /* Fraunces' soft/wonk axes — the difference between "a serif" and
-     something with a hand in it. */
-  .display-soft {
-    font-variation-settings: "SOFT" 55, "WONK" 1;
-  }
+  /* ---- Section grounds ------------------------------------------------ */
 
-  .on-umber {
-    background: var(--color-umber);
+  .on-green {
+    background: var(--color-green-ink);
     color: var(--color-paper);
   }
 
+  /* Text over a photograph. The scrim itself is applied by the component;
+     this only re-scopes the type colours. */
+  .on-photo { color: var(--color-paper); }
+
+  .on-blush { background: var(--color-blush); }
+  .on-mint { background: var(--color-mint); }
+  .on-cream { background: var(--color-cream); }
+
+  /* Headings sit a step deeper on the tinted grounds so they hold their
+     weight against the added colour. */
+  .on-mint :where(h2, h3) { color: var(--color-green-deep); }
+  .on-blush :where(h2, h3) { color: var(--color-wine-deep); }
+
   /*
-    Mid-brown grounds. The default muted tone (--color-stone) only reaches
-    ~2.4:1 on these, so muted text is scoped to umber-deep instead.
-    Almond can carry it at 80% (4.75:1); tan is darker and needs the full
-    strength (4.8:1), so hierarchy there comes from size, not colour.
+    Muted body copy is a dark tone, which lands at under 2:1 on the green
+    grounds. Shared components (SectionHeading's lead, for one) are used on
+    both, so the tone is re-scoped here rather than threaded through as a
+    prop everywhere.
   */
-  .on-almond,
-  .on-tan {
-    color: var(--color-umber-deep);
-  }
-
-  .on-almond { background: var(--color-almond); }
-  .on-tan { background: var(--color-tan); }
-
-  .on-almond :where(.text-stone),
-  .on-almond :where(.eyebrow) {
-    color: color-mix(in srgb, var(--color-umber-deep) 80%, transparent);
-  }
-
-  .on-tan :where(.text-stone),
-  .on-tan :where(.eyebrow) {
-    color: var(--color-umber-deep);
-  }
-
-  .on-almond :where(.border-paper-edge),
-  .on-tan :where(.border-paper-edge) {
-    border-color: color-mix(in srgb, var(--color-umber-deep) 26%, transparent);
-  }
-
-  .on-almond :where(.peak-rule),
-  .on-tan :where(.peak-rule) {
-    color: var(--color-umber-deep);
+  .on-green :where(.text-stone),
+  .on-photo :where(.text-stone) {
+    color: var(--color-linen);
   }
 }
 
@@ -352,6 +444,17 @@
   to { transform: translateX(-50%); }
 }
 
+/* The slow push on the active hero slide — the reference's Ken Burns move. */
+@keyframes slide-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes ken-burns {
+  from { transform: scale(1.02); }
+  to { transform: scale(1.12); }
+}
+
 .rise {
   animation: rise 0.9s var(--ease-out-soft) both;
 }
@@ -364,6 +467,14 @@
    a single sliding strip. */
 .marquee-track-reverse {
   animation: drift 64s linear infinite reverse;
+}
+
+.slide-active {
+  animation: slide-in 1.1s var(--ease-out-soft) both;
+}
+
+.slide-active img {
+  animation: ken-burns 9s linear both;
 }
 
 /*
@@ -421,6 +532,8 @@
   .marquee-track-reverse { animation: none; transform: none; }
 
   .media-zoom:hover img { transform: none; }
+  .slide-active img { animation: none; transform: none; }
+  .card:hover { transform: none; }
 
   /* Never leave content hidden or displaced when motion is suppressed. */
   .js-reveal [data-reveal],
