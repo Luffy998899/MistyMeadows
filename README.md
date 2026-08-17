@@ -432,6 +432,11 @@ legitimately contains commas and slashes.
 ./deploy.sh
 ```
 
+It asks for a domain, then — if there is no `.env.local` yet — for your
+Supabase and email credentials, and writes them to `.env.local` with mode
+`600`. Secret values are read without echo; only a masked form
+(`re_FAK…6789`) is shown back so you can confirm the paste landed.
+
 It asks for a domain. **Leave it blank and the site just runs locally** on
 `http://localhost:3000` — nothing is published and no certificate is requested.
 Give it a domain and it installs nginx, registers a systemd service, and
@@ -448,3 +453,37 @@ an HTTP→HTTPS redirect.
 Point the domain's A record at the server *before* running it with a domain —
 certbot's HTTP challenge cannot succeed otherwise. The script checks DNS and
 warns first. `www` is added to the certificate only when it resolves.
+
+### If the build dies with a rayon panic
+
+```
+panicked ... The global thread pool has not been initialized.
+... IOError(Os { code: 11, kind: WouldBlock })
+Next.js build worker exited with code: null and signal: SIGABRT
+```
+
+That is not a code error. Next's Rust toolchain builds a thread pool at
+start-up, and on a small VPS a low process ceiling makes the spawn fail with
+`EAGAIN`. `deploy.sh` handles it: it prints the CPU, RAM and process limit
+before building, and retries single-threaded if the first attempt fails.
+
+To build by hand on such a box:
+
+```bash
+RAYON_NUM_THREADS=1 npm run build
+```
+
+If it is killed rather than panicking, the box is out of memory — add swap:
+
+```bash
+sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile
+sudo mkswap /swapfile && sudo swapon /swapfile
+```
+
+### Credentials
+
+`.env.local` is gitignored and never committed. If a key has been pasted
+anywhere it might be recorded — a chat window, an email, a screenshot —
+rotate it: Supabase keys under **Settings → API**, Resend keys under
+**API Keys**. The service-role key in particular bypasses row level security
+entirely, so it grants full read/write on the database to anyone holding it.

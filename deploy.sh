@@ -123,14 +123,94 @@ NODE_MAJOR="$(node -p 'process.versions.node.split(".")[0]')"
 [ "$NODE_MAJOR" -ge 18 ] || die "Node 18 or newer is required (found $(node -v))."
 info "Node $(node -v)"
 
-if [ ! -f .env.local ] && [ ! -f .env ]; then
-  warn "No .env.local found — the site will start in demo mode with no database."
-  warn "Copy .env.example to .env.local and fill in your Supabase keys."
-  if [ -t 0 ]; then
-    printf 'Continue anyway? [y/N] '
-    read -r reply || reply=""
-    case "$reply" in [yY]*) ;; *) die "Stopped. Add .env.local and run again." ;; esac
-  fi
+# ---------------------------------------------------------------------
+# Environment
+#
+# Prompts for the keys and writes .env.local (mode 600). Secrets are read
+# with `read -rs` so they never appear on screen or in shell history, and
+# only a masked form is echoed back for confirmation.
+# ---------------------------------------------------------------------
+
+ENV_FILE="$APP_DIR/.env.local"
+
+mask() {
+  local value="$1"
+  if [ "${#value}" -le 12 ]; then printf '********'
+  else printf '%s…%s' "${value:0:6}" "${value: -4}"; fi
+}
+
+# ask <varname> <prompt> <secret:true|false> <required:true|false> [default]
+ask() {
+  local __var="$1" __prompt="$2" __secret="$3" __required="$4" __default="${5:-}"
+  local __value=""
+
+  while :; do
+    if [ -n "$__default" ]; then
+      printf '  %s [%s]: ' "$__prompt" "$__default"
+    else
+      printf '  %s: ' "$__prompt"
+    fi
+
+    if [ "$__secret" = true ]; then
+      read -rs __value || __value=""
+      printf '\n'
+    else
+      read -r __value || __value=""
+    fi
+
+    # Strip surrounding whitespace and any quote characters, which would
+    # otherwise break the KEY="value" form written below.
+    __value="$(printf '%s' "$__value" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/"//g')"
+    [ -z "$__value" ] && __value="$__default"
+
+    if [ -n "$__value" ]; then
+      [ "$__secret" = true ] && printf '    saved as %s\n' "$(mask "$__value")"
+      break
+    fi
+    if [ "$__required" != true ]; then break; fi
+    warn "  Required — please enter a value."
+  done
+
+  printf -v "$__var" '%s' "$__value"
+}
+
+if [ -f "$ENV_FILE" ] || [ -f "$APP_DIR/.env" ]; then
+  info "Using the existing $(basename "$ENV_FILE")"
+elif [ ! -t 0 ]; then
+  warn "No .env.local and no terminal to ask on — starting in demo mode with no database."
+else
+  step "Configuring the site"
+  printf '\n  Paste the values from your Supabase project (Settings -> API)\n'
+  printf '  and your email provider. Nothing is echoed back in full.\n\n'
+
+  ask SUPA_URL       "Supabase project URL"        false true
+  ask SUPA_ANON      "Supabase anon key"           true  true
+  ask SUPA_SERVICE   "Supabase service role key"   true  true
+
+  printf '\n  Email (leave the API key blank to use SMTP from /admin/settings instead)\n\n'
+  ask RESEND_KEY     "Resend API key"              true  false
+  ask MAIL_FROM_ADDR "Send enquiries FROM"         false false "website@${DOMAIN:-mistymeadowsresorts.com}"
+  ask MAIL_TO_ADDR   "Send enquiries TO"           false false "info@mistymeadowsresorts.com"
+
+  # umask before creation so the file is never briefly world-readable.
+  ( umask 077
+    {
+      printf '# Written by deploy.sh on %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+      printf '# Contains live credentials. Never commit this file.\n\n'
+      printf 'NEXT_PUBLIC_SUPABASE_URL="%s"\n' "$SUPA_URL"
+      printf 'NEXT_PUBLIC_SUPABASE_ANON_KEY="%s"\n' "$SUPA_ANON"
+      printf 'SUPABASE_SERVICE_ROLE_KEY="%s"\n\n' "$SUPA_SERVICE"
+      [ -n "$RESEND_KEY" ] && printf 'RESEND_API_KEY="%s"\n' "$RESEND_KEY"
+      [ -n "$MAIL_FROM_ADDR" ] && printf 'MAIL_FROM="%s"\n' "$MAIL_FROM_ADDR"
+      [ -n "$MAIL_TO_ADDR" ] && printf 'MAIL_TO="%s"\n' "$MAIL_TO_ADDR"
+      [ -n "$DOMAIN" ] && printf '\nSERVER_ACTIONS_ALLOWED_ORIGINS="%s,www.%s"\n' "$DOMAIN" "$DOMAIN"
+    } > "$ENV_FILE"
+  )
+  chmod 600 "$ENV_FILE"
+
+  info "Wrote $ENV_FILE (readable only by $(id -un))"
+  warn "Treat these as live credentials. If they have been pasted anywhere"
+  warn "public — chat, email, a screenshot — rotate them before going live."
 fi
 
 # ---------------------------------------------------------------------
@@ -138,14 +218,58 @@ fi
 # ---------------------------------------------------------------------
 
 step "Installing dependencies"
+export NEXT_TELEMETRY_DISABLED=1
+
 if [ -f package-lock.json ]; then
   npm ci --no-audit --no-fund
 else
   npm install --no-audit --no-fund
 fi
 
+# npm 11+ gates install scripts behind an approval prompt, and sharp needs
+# its own to fetch the native binary Next uses for image optimisation.
+if ! node -e "require('sharp')" >/dev/null 2>&1; then
+  info "Building sharp (needed for image optimisation)"
+  npm rebuild sharp --foreground-scripts >/dev/null 2>&1 || true
+  node -e "require('sharp')" >/dev/null 2>&1 \
+    || warn "sharp is unavailable; images will be served unoptimised."
+fi
+
 step "Building"
-npm run build
+
+# Next's Rust toolchain builds a rayon thread pool at start-up. On a small
+# VPS, a low process/thread ceiling makes that spawn fail with EAGAIN and
+# the build dies with:
+#
+#   panicked ... The global thread pool has not been initialized.
+#   ... IOError(Os { code: 11, kind: WouldBlock })
+#
+# Capping the pool avoids it. Report the limits first so a genuinely
+# undersized box is obvious rather than mysterious.
+CPUS="$(nproc 2>/dev/null || echo 1)"
+MEM_MB="$(awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo 2>/dev/null || echo 0)"
+THREAD_LIMIT="$(ulimit -u 2>/dev/null || echo unlimited)"
+info "${CPUS} CPU(s), ${MEM_MB} MB RAM, process limit ${THREAD_LIMIT}"
+
+if [ "$MEM_MB" -gt 0 ] && [ "$MEM_MB" -lt 1800 ]; then
+  warn "Under ~2 GB of RAM. If the build is killed, add swap:"
+  warn "  sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile"
+  warn "  sudo mkswap /swapfile && sudo swapon /swapfile"
+  export NODE_OPTIONS="${NODE_OPTIONS:-} --max-old-space-size=1024"
+fi
+
+run_build() { # run_build <rayon-threads>
+  env RAYON_NUM_THREADS="$1" NEXT_TELEMETRY_DISABLED=1 npm run build
+}
+
+if ! run_build "$CPUS"; then
+  warn "Build failed. Retrying single-threaded — slower, but survives a low"
+  warn "thread ceiling, which is the usual cause on a small VPS."
+  rm -rf .next
+  run_build 1 || die "Build failed again. Check the output above; if it is
+    still the rayon thread-pool panic, raise the limit with
+    'ulimit -u 4096' or add swap, then re-run."
+fi
 
 # ---------------------------------------------------------------------
 # Local mode
